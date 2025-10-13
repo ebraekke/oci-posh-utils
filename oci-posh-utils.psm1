@@ -29,8 +29,9 @@ Foreach($import in @($Public))
     {
         Write-Error -Message "Failed to import public function $($import.fullname): $_"
     }
-    ## You **can** import modules that are not in scope/visible!
-    ## So this will fail silently if there teh module has a different name than the file.
+    ## NOTE: 
+    ## You **can** export functions that are not in scope/visible!
+    ## So this "bootstrapping" will fail silently if the function has a different name than the (base part of the) file.
     Try
     {
         Export-ModuleMember -Function (Get-ChildItem $import).BaseName
