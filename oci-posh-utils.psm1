@@ -9,6 +9,7 @@ Foreach($import in @($Private))
     Try
     {
         . $import.fullname
+        Write-Verbose "Dot sourced ${import.fullname}"
     }
     Catch
     {
@@ -35,14 +36,14 @@ Foreach($import in @($Public))
     ##   (1) if the function has a different name than the (base part of the) file.
     ##   OR
     ##   (2) the file exists, but is is empty.
-    ## Hence, the DEBUG in the block below. 
+    ## Hence, the Write-Verbose in the block below. 
     ## If you are experiencing any problems, 
     ## validate DEBUG output versus the output of "Get-Command -Module oci-posh-utils"
     Try
     {
         $exportThis = (Get-ChildItem $import).BaseName
         Export-ModuleMember -Function $exportThis
-        Out-Host -InputObject "DEBUG: Export-ModuleMember -Function ${exportThis}"
+        Write-Verbose "Export-ModuleMember -Function ${exportThis}"
         $exportedCount++
     }
     Catch

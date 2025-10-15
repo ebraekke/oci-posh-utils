@@ -7,6 +7,7 @@ Create the actual port forwarding SSH process.
 Return an object to the caller:
 
 $bastionSessionDescription = [PSCustomObject]@{
+    PSTypeName = 'OpuBastionSession.Object'
     BastionSession = $bastionSession
     SShProcess = $sshProcess
     LocalPort = $localPort
@@ -123,7 +124,8 @@ function New-OpuPortForwardingSessionFull {
         ## Generate ephemeral key pair in $tmpDir.  
         ## name: bastionkey-${now}.{localPort}
         ##
-        ## Process will fail if another key with same name exists, in that case -- TODO: decide what to do
+        ## Process will fail if another key with same name exists, in that case ..
+        ##   TODO: decide what to do
         Out-Host -InputObject "Creating ephemeral key pair"
         $keyFile = -join("${tmpDir}/bastionkey-","${now}-${localPort}")
 
@@ -213,8 +215,10 @@ function New-OpuPortForwardingSessionFull {
             throw "Start-Process: $_"
         }
 
+        ## TODO: Add "IsActive member to Object to determine if session was destroyed before expiration"
         ## Create return Object
         $localBastionSession = [PSCustomObject]@{
+            PSTypeName = 'OpuBastionSession.Object'
             BastionSession = $bastionSession
             SShProcess = $sshProcess
             LocalPort = $localPort
