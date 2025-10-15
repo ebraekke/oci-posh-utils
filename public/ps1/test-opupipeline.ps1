@@ -1,5 +1,6 @@
 
 <#
+https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-pscustomobject?view=powershell-7.5
 
         $localBastionSession = [PSCustomObject]@{
             PSTypeName = 'OpuBastionSession.Object'

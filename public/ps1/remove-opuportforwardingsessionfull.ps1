@@ -10,10 +10,12 @@ Output related to the bastion session deletion will be displayed.
 .PARAMETER BastionSessionDescription
 
 $BastionSessionDescription = [PSCustomObject]@{
+    PSTypeName = 'OpuBastionSession.Object'
     BastionSession = $bastionSession
     SShProcess = $sshProcess
     LocalPort = $localPort
     Target = "${TargetHost}:${TargetPort}"
+    SessionExpires = <SessionExpireTimeInLocalTime>
 }
  
 
@@ -37,20 +39,25 @@ Line |
 
 function Remove-OpuPortForwardingSessionFull {
     param (
-        [Parameter(Mandatory,HelpMessage='Full Bastion Port Forwarding Session Description Object')]
-        $BastionSessionDescription
+        [Parameter(Mandatory, ValueFromPipeline=$true, HelpMessage='Full Bastion Port Forwarding Session Description Object')]
+        [PSTypeName('OpuBastionSession.Object')]$BastionSessionDescription
     )
 
-    ## To Maximize possible clean ups, continue on error
-    $userErrorActionPreference = $ErrorActionPreference
-    $ErrorActionPreference = "Continue"
+    begin {
+        Write-Verbose "Remove-OpuPortForwardingSessionFull: begin"
 
-    try {
+        ## TODO: Review ErrorAction across board
+        ## To Maximize possible clean ups, continue on error
+        $userErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+    }
+
+    process {
         Import-Module OCI.PSModules.Bastion
 
         ## Kill SSH process
         Stop-Process -InputObject $BastionSessionDescription.SshProcess -ErrorAction SilentlyContinue
-    
+        
         ## Kill Bastion session, with Force, ignore output and error (it is the work request id)
         try {
             Remove-OCIBastionSession -SessionId $BastionSessionDescription.BastionSession.Id -Force -ErrorAction Ignore | Out-Null            
@@ -59,8 +66,12 @@ function Remove-OpuPortForwardingSessionFull {
             Write-Error "Remove-OpuPortForwardingSessionFull: $_"
         }
     }
-    finally {
+   
+    end {
+        Write-Verbose "Remove-OpuPortForwardingSessionFull: end"
+
         ## Done, restore settings
         $ErrorActionPreference = $userErrorActionPreference
-    }
+    }    
+    
 }
