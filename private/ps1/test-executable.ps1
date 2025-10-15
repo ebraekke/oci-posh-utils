@@ -5,13 +5,13 @@ function Test-Executable {
     )
 
     if ($null -eq $ExeName) {
-        Throw "TestExecutable: -ExeName must be provided"
+        Throw "Test-Executable: -ExeName must be provided"
     }
     try {
         ## check that cmd exists
         Get-Command $ExeName -ErrorAction Stop | Out-Null
     }
     catch {
-        throw "${ExeName} not found"
+        throw "Test-Executable: ${ExeName} not found"
     }
 }

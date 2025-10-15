@@ -30,11 +30,19 @@ Foreach($import in @($Public))
         Write-Error -Message "Failed to import public function $($import.fullname): $_"
     }
     ## NOTE: 
-    ## You **can** export functions that are not in scope/visible!
-    ## So this "bootstrapping" will fail silently if the function has a different name than the (base part of the) file.
+    ## You **can** export functions that are not in scope/visible (without error being thrown)!
+    ## So this "bootstrapping" will fail silently 
+    ##   (1) if the function has a different name than the (base part of the) file.
+    ##   OR
+    ##   (2) the file exists, but is is empty.
+    ## Hence, the DEBUG in the block below. 
+    ## If you are experiencing any problems, validate DEBUG output versus the output
+    ## of "Get-Command -Module oci-posh-utils"
     Try
     {
-        Export-ModuleMember -Function (Get-ChildItem $import).BaseName
+        $exportThis = (Get-ChildItem $import).BaseName
+        Export-ModuleMember -Function $exportThis
+        Out-Host -InputObject "DEBUG: Exported helper function ${exportThis}"
         $exportedCount++
     }
     Catch

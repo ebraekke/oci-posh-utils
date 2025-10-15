@@ -5,8 +5,12 @@ function Get-TempDir {
     } 
     elseif ($IsLinux) {
         return "/tmp"
+    }     
+    elseif ($IsMacOS) {
+        throw "Get-TempDir: Currently no support for MacOS"
     } 
     else {
-        throw "Get-TempDir: Currently no support for Mac"
+        ## This should *NOT* happen!
+        throw "Get-TempDir: Unknown OS"
     }
 }

@@ -9,13 +9,13 @@ Can also be called independently.
 .EXAMPLE
 ## Test that mysqsh is installed is successful. (no response) 
 
-Test-OpuMysqlshAvailability
+Test-OpuMysqlshAvailable
 
 .EXAMPLE
 ## Test that mysqlsh is installed that fails.
 
-Test-OpuSshAvailability
-Exception: mysqlsh not found
+Test-OpuMysqlshAvailable
+Exception: Test-Executable mysqlsh not found
 #>
 function Test-OpuMysqlshAvailable {
     Test-Executable -ExeName "mysqlsh"

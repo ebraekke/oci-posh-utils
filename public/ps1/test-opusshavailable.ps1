@@ -9,20 +9,20 @@ Can also be called independently.
 .EXAMPLE
 ## Test that ssh is installed is successful. (no output)
 
-Test-OpuSshAvailability
+Test-OpuSshAvailable
 
 
 .EXAMPLE
 ## Test that ssh tools are installed that fails because of no ssh.
 
-Test-OpuSshAvailability
-Exception: ssh not found
+Test-OpuSshAvailable
+Exception: Test-Executable: ssh not found
 
 .EXAMPLE
 ## Test that ssh tools are installed that fails because of no ssh-keygen.
 
-Test-OpuSshAvailability
-Exception: ssh-keygen not found
+Test-OpuSshAvailable
+Exception: Test-Executable: ssh-keygen not found
 #>
 function Test-OpuSshAvailable {
     Test-Executable -ExeName "ssh"

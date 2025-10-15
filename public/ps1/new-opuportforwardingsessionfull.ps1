@@ -1,0 +1,245 @@
+<#
+.SYNOPSIS
+Create a port forwarding sesssion with OCI Bastion service.
+Generate SSH key pair to be used for session.
+Create the actual port forwarding SSH process.
+
+Return an object to the caller:
+
+$bastionSessionDescription = [PSCustomObject]@{
+    BastionSession = $bastionSession
+    SShProcess = $sshProcess
+    LocalPort = $localPort
+    Target = "${TargetHost}:${TargetPort}"
+    SessionExpires = <SessionExpireTimeInLocalTime>
+}
+        
+.DESCRIPTION
+Creates a port forwarding session with the OCI Bastion Service and the required SSH port forwarding process.
+This combo will allow you to connect through the Bastion service via a local port and to your destination: $TargetHost:$TargetPort   
+A path from the Bastion to the target is required.
+The Bastion session inherits TTL from the Bastion (instance). 
+
+.PARAMETER BastionId
+OCID of Bastion with wich to create a session. 
+ 
+.PARAMETER TargetHost
+IP address of target host. 
+   
+.PARAMETER TargetPort
+Port number at TargetHost to create a session to. 
+Defaults to 22.  
+
+.PARAMETER LocalPort
+Local port to use for port forwarding. 
+Defaults to 0, means that it will be randomly assigned.
+Error thrown if requesting a port number lower than 1024.  
+
+.PARAMETER WaitForConnectSeconds
+How many seconds to wait for connection to be established before returning. 
+Default 10.
+Needed because it takes some time from the session is created 
+until there is a path from the local port to the destination.
+VPNs tend to make this even slower.
+
+.EXAMPLE 
+## Creating a forwarding session to the default port
+$bastion_session=New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -TargetHost $target_ip
+Creating Port Forwarding Session to 10.0.0.251:22
+Waiting for creation of bastion session to complete
+
+$bastion_session
+BastionSession : Oci.BastionService.Models.Session
+SShProcess     : System.Diagnostics.Process (Idle)
+LocalPort      : 9084
+Target         : 10.0.0.251:22
+SessionExpires : 13.10.2025 14:26:05
+
+
+Stop-Process -InputObject $bastion_session.SShProcess
+
+Remove-OciBastionSession -SessionId $bastion_session.BastionSession.Id -Force
+OpcWorkRequestId
+----------------
+ocid1.bastionworkrequest.oc1.eu-frankfurt-1.amaaaaaa3gkdkiaai6rzunvyiwtmmvwjslatvglkhynjkdzx2vvwht5gckkq
+
+.EXAMPLE 
+## Creating a forwarding session to a mysql port
+$bastion_session=New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -TargetHost $target_ip -TargetPort 3306
+Creating Port Forwarding Session to 10.0.0.251:3306
+Waiting for creation of bastion session to complete
+
+$bastion_session
+BastionSession : Oci.BastionService.Models.Session
+SShProcess     : System.Diagnostics.Process (Idle)
+LocalPort      : 9374
+Target         : 10.0.0.251:3306
+SessionExpires : 04.10.2025 11:16:05
+
+
+Stop-Process -InputObject $bastion_session.SShProcess
+
+Remove-OciBastionSession -SessionId $bastion_session.BastionSession.Id -Force
+OpcWorkRequestId
+----------------
+ocid1.bastionworkrequest.oc1.eu-frankfurt-1.amaaaaaa3gkdkiaauz4sperzwv32kjdun4cybqn5ufs6qwnq465vptm6ftpa
+#>
+function New-OpuPortForwardingSessionFull {
+    param (
+        [Parameter(Mandatory,HelpMessage='OCID of Bastion')]
+        [String]$BastionId, 
+        [Parameter(Mandatory,HelpMessage='IP address of target host')]
+        [String]$TargetHost,
+        [Int32]$TargetPort=22,
+        [Parameter(HelpMessage='Use this local port, 0 means assign')]
+        [Int32]$LocalPort=0,
+        [Parameter(HelpMessage='Seconds to wait before returing the session to the caller')]
+        [Int32]$WaitForConnectSeconds=10
+    )
+    $userErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Stop" 
+
+    try {
+
+        ## Validate input
+        if ((5 -gt $WaitForConnectSeconds) -or (60 -lt $WaitForConnectSeconds)) {
+            throw "WaitForConnectSeconds is ${WaitForConnectSeconds}: must to be between 5 and 60!"
+        }
+        ## Assign or verify LocalPort 
+        if (0 -eq $LocalPort) {
+            $LocalPort = Get-Random -Minimum 9001 -Maximum 9099
+        } elseif ($LocalPort -lt 1024) {
+            throw "LocalPort is ${LocalPort}: must be 1024 or greater!"
+        }
+
+        ## check that mandatory sw is installed    
+        Test-OpuSshAvailable
+
+        ## Import modules
+        Import-Module OCI.PSModules.Bastion
+        $tmpDir = Get-TempDir
+        $now = Get-Date -Format "yyyy_MM_dd_HH_mm_ss"
+
+        ## Generate ephemeral key pair in $tmpDir.  
+        ## name: bastionkey-${now}.{localPort}
+        ##
+        ## Process will fail if another key with same name exists, in that case -- TODO: decide what to do
+        Out-Host -InputObject "Creating ephemeral key pair"
+        $keyFile = -join("${tmpDir}/bastionkey-","${now}-${localPort}")
+
+        try {
+            if ($IsWindows) {
+                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' 
+            } elseif ($IsLinux) {
+                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '""' 
+            } else {
+                throw "Platform not supported ... how did you get here?"
+            }
+        }
+        catch {
+            throw "ssh-keygen: $_"
+        }
+
+        Out-Host -InputObject "Creating Port Forwarding Session to ${TargetHost}:${TargetPort}"
+
+        try {
+            $bastionService = Get-OCIBastion -BastionId $BastionId  -WaitForLifecycleState Active -WaitIntervalSeconds 0 -ErrorAction Stop
+        }
+        catch {
+            throw "Get-OCIBastion: $_"
+        }    
+        $maxSessionTtlInSeconds = $bastionService.MaxSessionTtlInSeconds
+
+        ## Details of target
+        $targetResourceDetails                                  = New-Object -TypeName 'Oci.bastionService.Models.CreatePortForwardingSessionTargetResourceDetails'
+        $targetResourceDetails.TargetResourcePrivateIpAddress   = $TargetHost    
+        $targetResourceDetails.TargetResourcePort               = $TargetPort
+
+        ## Details of keyfile
+        $keyDetails                  = New-Object -TypeName 'Oci.bastionService.Models.PublicKeyDetails'
+        $keyDetails.PublicKeyContent = Get-Content "${keyFile}.pub"
+
+        ## The actual session, name matches ephemeral key(s)
+        $sessionDetails                       = New-Object -TypeName 'Oci.bastionService.Models.CreateSessionDetails'
+        $sessionDetails.DisplayName           = -join("BastionSession-${now}-${localPort}")
+        $sessionDetails.SessionTtlInSeconds   = $maxSessionTtlInSeconds
+        $sessionDetails.BastionId             = $BastionId
+        $sessionDetails.KeyType               = "PUB"
+        $sessionDetails.TargetResourceDetails = $targetResourceDetails
+        $sessionDetails.KeyDetails            = $keyDetails
+    
+        try {
+            $bastionSession = New-OciBastionSession -CreateSessionDetails $sessionDetails -ErrorAction Stop
+        }
+        catch {
+            throw "New-OciBastionSession: $_"
+        }
+    
+        Out-Host -InputObject "Waiting for creation of bastion session to complete"
+        try {
+            $bastionSession = Get-OCIBastionSession -SessionId $bastionSession.Id -WaitForLifecycleState Active  -ErrorAction Stop 
+        }
+        catch {
+            throw "Get-OCIBastionSession: $_"
+        }
+
+        ## Create ssh command argument
+        $sshArgs = $bastionSession.SshMetadata["command"]
+
+        ## First clean up any comments from Oracle(!)
+        $hashPos = $sshArgs.IndexOf('#')
+        if ($hashPos -gt 0) {
+	        $strlen = $sshArgs.length
+	        $sshArgs = $sshArgs.Remove($hashPos, $strlen-$hashPos)
+        }
+
+        ## Supply relevant parameters
+        $sshArgs = $sshArgs.replace("ssh",          "-4")    ## avoid "bind: Cannot assign requested address" 
+        $sshArgs = $sshArgs.replace("<privateKey>", $keyFile)
+        $sshArgs = $sshArgs.replace("<localPort>",  $localPort)
+        $sshArgs += " -o StrictHostKeyChecking=no"
+
+        Write-Debug "CONN: ssh ${sshArgs}"
+        
+        Out-Host -InputObject "Creating SSH tunnel"
+        try {
+            if ($IsWindows) {
+                $sshProcess = Start-Process -FilePath "ssh" -ArgumentList $sshArgs -WindowStyle Hidden -PassThru -ErrorAction Stop
+            } elseif ($IsLinux) {
+                $sshProcess = Start-Process -FilePath "ssh" -ArgumentList $sshArgs -PassThru -ErrorAction Stop
+            }
+        }
+        catch {
+            throw "Start-Process: $_"
+        }
+
+        ## Create return Object
+        $localBastionSession = [PSCustomObject]@{
+            BastionSession = $bastionSession
+            SShProcess = $sshProcess
+            LocalPort = $localPort
+            Target = "${TargetHost}:${TargetPort}"
+            SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds)
+        }
+
+        Out-Host -InputObject "Waiting for creation of SSH tunnel to complete"
+        Start-Sleep -Seconds $WaitForConnectSeconds
+
+        $localBastionSession
+    } catch {
+        ## Pass exception on back
+        throw "New-OpuPortForwardingSessionFull: $_"
+    } finally {
+        ## To Maximize possible clean ups, continue on error 
+        $ErrorActionPreference = "Continue"
+
+        ## Delete the files, they are not needed 
+        $ErrorActionPreference = 'SilentlyContinue' 
+        Remove-Item $keyFile -ErrorAction SilentlyContinue
+        Remove-Item "${keyFile}.pub" -ErrorAction SilentlyContinue
+        $ErrorActionPreference = "Continue"
+    
+        ## Done, restore settings
+        $ErrorActionPreference = $userErrorActionPreference
+    }
+}
