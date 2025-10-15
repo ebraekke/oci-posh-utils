@@ -42,12 +42,12 @@ Foreach($import in @($Public))
     {
         $exportThis = (Get-ChildItem $import).BaseName
         Export-ModuleMember -Function $exportThis
-        Out-Host -InputObject "DEBUG: Exported helper function ${exportThis}"
+        Out-Host -InputObject "DEBUG: Export-ModuleMember -Function ${exportThis}"
         $exportedCount++
     }
     Catch
     {
-        Write-Error -Message "Failed to \"export\" imported public function $($exportThis): $_"
+        Write-Error -Message "Export-ModuleMember -Function $($exportThis): $_"
     }
 }
 

@@ -2,6 +2,10 @@
 OCI powershell utils
 
 
+Code structure inspired by 
+https://www.psplaybook.com/2025/02/06/powershell-modules-best-practices/
+
+
 
 ## Remember
 
