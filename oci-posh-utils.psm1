@@ -9,7 +9,7 @@ Foreach($import in @($Private))
     Try
     {
         . $import.fullname
-        Write-Verbose "Dot sourced ${import.fullname}"
+        Out-Host -InputObject "DEBUG dot sourced: $($import.fullname)"
     }
     Catch
     {
@@ -43,12 +43,12 @@ Foreach($import in @($Public))
     {
         $exportThis = (Get-ChildItem $import).BaseName
         Export-ModuleMember -Function $exportThis
-        Write-Verbose "Export-ModuleMember -Function ${exportThis}"
+        Out-Host -InputObject "DEBUG Export-ModuleMember -Function ${exportThis}"
         $exportedCount++
     }
     Catch
     {
-        Write-Error -Message "Export-ModuleMember -Function $($exportThis): $_"
+        Write-Error -Message "Export-ModuleMember -Function ${exportThis}: $_"
     }
 }
 
