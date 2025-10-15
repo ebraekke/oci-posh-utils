@@ -36,8 +36,8 @@ Foreach($import in @($Public))
     ##   OR
     ##   (2) the file exists, but is is empty.
     ## Hence, the DEBUG in the block below. 
-    ## If you are experiencing any problems, validate DEBUG output versus the output
-    ## of "Get-Command -Module oci-posh-utils"
+    ## If you are experiencing any problems, 
+    ## validate DEBUG output versus the output of "Get-Command -Module oci-posh-utils"
     Try
     {
         $exportThis = (Get-ChildItem $import).BaseName
@@ -47,7 +47,7 @@ Foreach($import in @($Public))
     }
     Catch
     {
-        Write-Error -Message "Failed to \"export\" imported public function $($import.fullname): $_"
+        Write-Error -Message "Failed to \"export\" imported public function $($exportThis): $_"
     }
 }
 
