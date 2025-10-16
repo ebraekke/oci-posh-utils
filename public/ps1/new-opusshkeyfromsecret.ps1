@@ -62,27 +62,19 @@ function New-OpuSshKeyFromSecret {
         $UserErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = "Stop" 
         ## END: generic section
+        
+        Write-Verbose "New-SshKeyFromSecret: end"
 
         ## check that mandatory sw is installed    
         Test-OpuSshAvailable
-
-        Write-Verbose "New-OpuSshKeyFromSecret: Getting the SSH key from the secrets vault"
-
-        ## Get secret (read ssh key) from SecretId
-        try {
-            $secret = Get-OCISecretsSecretBundle -SecretId $SecretId -Stage Current -ErrorAction Stop
-        }
-        catch {
-            throw "Get-OCISecretsSecretBundle: $_"
-        }
 
         ## Generate name for temp SSH key file, tmpDir + base name supplied in parameter + padding
         $paddingForName = Get-Random -Minimum 1 -Maximum 99999
         $tmpDir = Get-TempDir
         $sshKey = -join("${tmpDir}/", $KeyBaseName, "-", "${paddingForName}") 
 
-        ## Get Base64 encoded content and store in temp SSH key file  
-        $sshKeyContent = [Text.Encoding]::Utf8.GetString([Convert]::FromBase64String($secret.SecretBundleContent.Content))
+        ## Get plain text from vault content and store in temp SSH key file  
+        $sshKeyContent = Get-OpuSecret -SecretId $SecretId -AsPlainText $true 
         try {
             New-Item -Path $sshKey -Value $sshKeyContent -ErrorAction Stop | Out-Null
         }
@@ -109,6 +101,8 @@ function New-OpuSshKeyFromSecret {
         return $false
 
     } finally {
+        Write-Verbose "New-SshKeyFromSecret: end"
+
         ## START: generic section
         ## To Maximize possible clean ups, continue on error 
         $ErrorActionPreference = "Continue"

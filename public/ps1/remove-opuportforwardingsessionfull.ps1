@@ -44,15 +44,16 @@ function Remove-OpuPortForwardingSessionFull {
     )
 
     begin {
-        Write-Verbose "Remove-OpuPortForwardingSessionFull: begin"
+        ## START: generic section 
+        $UserErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Stop" 
+        ## END: generic section
 
-        ## TODO: Review ErrorAction across board
-        ## To Maximize possible clean ups, continue on error
-        $userErrorActionPreference = $ErrorActionPreference
-        $ErrorActionPreference = "Continue"
+        Write-Verbose "Remove-OpuPortForwardingSessionFull: begin"
     }
 
     process {
+
         Import-Module OCI.PSModules.Bastion
 
         ## Kill SSH process

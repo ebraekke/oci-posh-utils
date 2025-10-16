@@ -49,14 +49,18 @@ function Get-OpuSecret {
         [bool]$AsPlainText=$true
     )
 
-    $userErrorActionPreference = $ErrorActionPreference
-    $ErrorActionPreference = "Stop" 
-    Write-Verbose "Get-OpuSecret: begin"
-
     try {
+        ## START: generic section 
+        $UserErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Stop" 
+        ## END: generic section
+        
+        Write-Verbose "Get-OpuSecret: begin"
+
         ## Import the modules needed here
         Import-Module OCI.PSModules.Secrets
 
+        Write-Verbose "Get-OpuSecret: Getting the SSH key from the secrets vault"
 
         ## Get secret bundle based on ocid 
         try {

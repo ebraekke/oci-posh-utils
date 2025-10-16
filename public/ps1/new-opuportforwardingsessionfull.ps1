@@ -92,10 +92,14 @@ function New-OpuPortForwardingSessionFull {
         [Parameter(HelpMessage='Seconds to wait before returing the session to the caller')]
         [Int32]$WaitForConnectSeconds=10
     )
-    $userErrorActionPreference = $ErrorActionPreference
-    $ErrorActionPreference = "Stop" 
 
     try {
+        ## START: generic section 
+        $UserErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Stop" 
+        ## END: generic section
+
+        Write-Verbose "New-OpuPortForwardingSessionFull: begin"
 
         ## Validate input
         if ((5 -gt $WaitForConnectSeconds) -or (60 -lt $WaitForConnectSeconds)) {
@@ -229,6 +233,8 @@ function New-OpuPortForwardingSessionFull {
         ## Pass exception on back
         throw "New-OpuPortForwardingSessionFull: $_"
     } finally {
+        Write-Verbose "New-OpuPortForwardingSessionFull: end"
+
         ## To Maximize possible clean ups, continue on error 
         $ErrorActionPreference = "Continue"
 
