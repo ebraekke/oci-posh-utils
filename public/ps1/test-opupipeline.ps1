@@ -18,20 +18,23 @@ function Test-OpuPipeLine {
     param (
         [Parameter(Mandatory, ValueFromPipeline=$true)]
         [PSTypeName('OpuBastionSession.Object')]$BastionSession,
-        [Parameter(HelpMessage='User to connect at target (opc)')]
-        [String]$OsUser="opc"
+        [Parameter(Mandatory, HelpMessage='OCID of secret holding the SSH key')]
+        [String]$SecretId
     )
 
     begin {
-        Write-Verbose "Starting function..."
+        Write-Verbose "Test-OpuPipeLine: Starting function..."
     }
 
     process {
-        ## Write-Verbose "Processing object: $($Name)"
-        Write-Output "Hello World! $($BastionSession.LocalPort), ${OsUser}"
+        $sshFile = New-SshKeyFromSecret -SecretId $SecretId -KeyBaseName $BastionSession.BastionSession.DisplayName
+
+        Write-Output "Name of keyfile ${sshFile}"
+
+#        Write-Output "Name of keyfile $($BastionSession.LocalPort), ${OsUser}"
     }
 
     end {
-        Write-Verbose "Completed function."
+        Write-Verbose "Test-OpuPipeLine: Completed function."
     }    
 }

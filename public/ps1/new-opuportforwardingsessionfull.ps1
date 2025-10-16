@@ -45,45 +45,40 @@ VPNs tend to make this even slower.
 
 .EXAMPLE 
 ## Creating a forwarding session to the default port
-$bastion_session=New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -TargetHost $target_ip
-Creating Port Forwarding Session to 10.0.0.251:22
-Waiting for creation of bastion session to complete
+> $bastion_session = New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -TargetHost 10.0.1.249
 
-$bastion_session
+Creating ephemeral key pair
+Creating Port Forwarding Session to 10.0.1.249:22
+Waiting for creation of bastion session to complete
+Creating SSH tunnel
+Waiting for creation of SSH tunnel to complete
+
+> $bastion_session
+
 BastionSession : Oci.BastionService.Models.Session
 SShProcess     : System.Diagnostics.Process (Idle)
 LocalPort      : 9084
 Target         : 10.0.0.251:22
 SessionExpires : 13.10.2025 14:26:05
 
-
-Stop-Process -InputObject $bastion_session.SShProcess
-
-Remove-OciBastionSession -SessionId $bastion_session.BastionSession.Id -Force
-OpcWorkRequestId
-----------------
-ocid1.bastionworkrequest.oc1.eu-frankfurt-1.amaaaaaa3gkdkiaai6rzunvyiwtmmvwjslatvglkhynjkdzx2vvwht5gckkq
-
 .EXAMPLE 
 ## Creating a forwarding session to a mysql port
-$bastion_session=New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -TargetHost $target_ip -TargetPort 3306
-Creating Port Forwarding Session to 10.0.0.251:3306
-Waiting for creation of bastion session to complete
 
-$bastion_session
+❯ $bastion_session = New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -TargetHost 10.0.1.249 -TargetPort 3306
+
+Creating ephemeral key pair
+Creating Port Forwarding Session to 10.0.1.249:3306
+Waiting for creation of bastion session to complete
+Creating SSH tunnel
+Waiting for creation of SSH tunnel to complete
+
+❯ $bastion_session
+
 BastionSession : Oci.BastionService.Models.Session
 SShProcess     : System.Diagnostics.Process (Idle)
-LocalPort      : 9374
-Target         : 10.0.0.251:3306
-SessionExpires : 04.10.2025 11:16:05
-
-
-Stop-Process -InputObject $bastion_session.SShProcess
-
-Remove-OciBastionSession -SessionId $bastion_session.BastionSession.Id -Force
-OpcWorkRequestId
-----------------
-ocid1.bastionworkrequest.oc1.eu-frankfurt-1.amaaaaaa3gkdkiaauz4sperzwv32kjdun4cybqn5ufs6qwnq465vptm6ftpa
+LocalPort      : 9043
+Target         : 10.0.1.249:3306
+SessionExpires : 16.10.2025 13:49:06
 #>
 function New-OpuPortForwardingSessionFull {
     param (

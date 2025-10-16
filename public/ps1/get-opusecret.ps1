@@ -7,7 +7,7 @@ Get secret from vault based on supplied ocid.
 Will return as Base64 encoded or as plain text depending on parameter AsPlainText
 
 .PARAMETER SecretId
-OCID of secret stored in teh vault. 
+OCID of secret stored in the vault. 
 
 .PARAMETER AsPlainText
 Boolean that determines if secret is returned as plain text or as base6 encoded.
@@ -66,13 +66,14 @@ function Get-OpuSecret {
             throw "Get-OCISecretsSecretBundle: $_"
         }
 
+        ## Get base6 encoded secret from bundle
         $secretBase64 = $secretBundle.SecretBundleContent.Content
  
         if ($true -eq $AsPlainText) {
             ## convert to plaintext
             $secret = [Text.Encoding]::Utf8.GetString([Convert]::FromBase64String($secretBase64))
         } else {
-            ## return as base64 encoded
+            ## return as is -- that is base64 encoded
             $secret = $secretBase64
         }
 
