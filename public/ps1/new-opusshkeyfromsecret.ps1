@@ -62,8 +62,8 @@ function New-OpuSshKeyFromSecret {
         $UserErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = "Stop" 
         ## END: generic section
-        
-        Write-Verbose "New-SshKeyFromSecret: end"
+
+        Write-Verbose "New-OpuSshKeyFromSecret: begin"
 
         ## check that mandatory sw is installed    
         Test-OpuSshAvailable
@@ -97,11 +97,11 @@ function New-OpuSshKeyFromSecret {
 
     } catch { 
         ## What else can we do? 
-        Write-Error "New-SshKeyFromSecret: $_"
+        Write-Error "New-OpuSshKeyFromSecret: $_"
         return $false
 
     } finally {
-        Write-Verbose "New-SshKeyFromSecret: end"
+        Write-Verbose "New-OpuSshKeyFromSecret: end"
 
         ## START: generic section
         ## To Maximize possible clean ups, continue on error 

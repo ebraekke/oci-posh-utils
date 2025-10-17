@@ -36,7 +36,7 @@ Foreach($import in @($Public))
     ##   (1) if the function has a different name than the (base part of the) file.
     ##   OR
     ##   (2) the file exists, but is is empty.
-    ## Hence, the Write-Verbose in the block below. 
+    ## Hence, the Out-Host in the block below. 
     ## If you are experiencing any problems, 
     ## validate DEBUG output versus the output of "Get-Command -Module oci-posh-utils"
     Try
