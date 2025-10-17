@@ -36,10 +36,9 @@ function New-OpuSshKeyFromKeygen {
         ## check that mandatory sw is installed    
         Test-OpuSshAvailable
 
-        ## Generate name for temp SSH key file, tmpDir + base name supplied in parameter + padding
-        $paddingForName = Get-Random -Minimum 1 -Maximum 99999
+        ## Generate name for temp SSH key file, tmpDir + base name supplied in parameter
         $tmpDir = Get-TempDir
-        $keyFile = -join ("${tmpDir}/", $KeyBaseName, "-", "${paddingForName}") 
+        $keyFile = -join ("${tmpDir}/", $KeyBaseName) 
 
         try {
             if ($IsWindows) {
