@@ -1,22 +1,38 @@
 <#
 .SYNOPSIS
-Create a new SSH key file  and return the name.
+Create a new SSH key file pair and return the name of the private file.
 
 .DESCRIPTION
-...
+Creates a new ssh key file pair with 2048 bit length in the TEMP directory of the runtim platform.
+Returns the name of the private key file. The public key file has the same name as the return value + ".pub". 
+Ensures that file has "rw" for owner only (0600) if platform is *nix.
  
 .PARAMETER KeyBaseName
 Base name to create key file from. 
-This name will be padded with a "-" and a random number between 1 and 99999.
 
 .EXAMPLE 
-## Example 1.  
+## Create key file pair successfully. 
+
+❯ New-OpuSshKeyFromKeygen -KeyBaseName "thisone"
+
+C:\Users\espenbr\AppData\Local\Temp/thisone
+
+❯ dir C:\Users\espenbr\AppData\Local\Temp/thisone*
+
+    Directory: C:\Users\espenbr\AppData\Local\Temp
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          20.10.2025    07:54           1831 thisone
+-a---          20.10.2025    07:54            407 thisone.pub
 
 .EXAMPLE 
-## Example 2
+## Failed attempt because ssh tools are not avilable. 
 
-.EXAMPLE 
-## Example 3
+❯ New-OpuSshKeyFromKeygen -KeyBaseName "thisone"
+
+New-OpuSshKeyFromKeygen: New-OpuSshKeyFromKeygen: Test-Executable: ssh not found
+
 #>
 
 function New-OpuSshKeyFromKeygen {

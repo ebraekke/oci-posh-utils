@@ -34,7 +34,10 @@ Defaults to 22.
 .PARAMETER LocalPort
 Local port to use for port forwarding. 
 Defaults to 0, means that it will be randomly assigned.
-Error thrown if requesting a port number lower than 1024.  
+Error thrown if requesting a port number lower than 1024.
+NOTE:
+If a specific port is requested and the call is part of a pipeline,
+the command will fail.
 
 .PARAMETER WaitForConnectSeconds
 How many seconds to wait for connection to be established before returning. 
@@ -93,6 +96,7 @@ function New-OpuPortForwardingSessionFull {
         [Int32]$WaitForConnectSeconds=10
     )
 
+    ## TODO: Set variable in begin to create counter across to allow for fixed LocalPort
     begin {
         ## START: generic section 
         $UserErrorActionPreference = $ErrorActionPreference
@@ -116,39 +120,24 @@ function New-OpuPortForwardingSessionFull {
                 throw "LocalPort is ${LocalPort}: must be 1024 or greater!"
             } 
             else {
+                ## Cannot ask for specific port in pipeline mode 
+                if ($PSCmdlet.MyInvocation.PipelinePosition -gt 0) {
+                    throw "CmdLet part of pipeline, fixed LocalPort is not allowed"
+                }
                 $useThisPort = $LocalPort
             }
+            Write-Host "Will use local port: ${useThisPort} "
 
             ## check that mandatory sw is installed    
             Test-OpuSshAvailable
 
             ## Import modules
             Import-Module OCI.PSModules.Bastion
-            $tmpDir = Get-TempDir
-            $now = Get-Date -Format "yyyy_MM_dd_HH_mm_ss"
 
-            ## Generate ephemeral key pair in $tmpDir.  
-            ## name: bastionkey-${now}.${useThisPort}
-            ##
-            ## Process will fail if another key with same name exists, in that case ..
-            ##   TODO: decide what to do
+            ## Generate ephemeral key pair with  name: bastionkey-${now}.${useThisPort}
             Write-Host "Creating ephemeral key pair"
-            $keyFile = -join ("${tmpDir}/bastionkey-", "${now}-${useThisPort}")
-
-            try {
-                if ($IsWindows) {
-                    ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' 
-                }
-                elseif ($IsLinux) {
-                    ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '""' 
-                }
-                else {
-                    throw "Platform not supported ... how did you get here?"
-                }
-            }
-            catch {
-                throw "ssh-keygen: $_"
-            }
+            $now = Get-Date -Format "yyyy_MM_dd_HH_mm_ss"
+            $keyFile= New-OpuSshKeyFromKeygen -KeyBaseName (-join ("bastionkey-", "${now}-${useThisPort}"))
 
             Write-Host "Creating Port Forwarding Session to ${TargetHost}:${TargetPort}"
 
