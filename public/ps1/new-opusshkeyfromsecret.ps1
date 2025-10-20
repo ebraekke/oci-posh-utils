@@ -59,7 +59,7 @@ function New-OpuSshKeyFromSecret {
 
     try {
         ## START: generic section 
-        $UserErrorActionPreference = $ErrorActionPreference
+        $userErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = "Stop" 
         ## END: generic section
 
@@ -103,14 +103,7 @@ function New-OpuSshKeyFromSecret {
     } finally {
         Write-Verbose "New-OpuSshKeyFromSecret: end"
 
-        ## START: generic section
-        ## To Maximize possible clean ups, continue on error 
-        $ErrorActionPreference = "Continue"
-
-        ## More here? 
-
         ## Done, restore settings
         $ErrorActionPreference = $userErrorActionPreference
-        ## END: generic section
     }
 }

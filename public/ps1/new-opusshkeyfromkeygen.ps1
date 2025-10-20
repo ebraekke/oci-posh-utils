@@ -43,7 +43,7 @@ function New-OpuSshKeyFromKeygen {
 
     try {
         ## START: generic section 
-        $UserErrorActionPreference = $ErrorActionPreference
+        $userErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = "Stop" 
         ## END: generic section
 

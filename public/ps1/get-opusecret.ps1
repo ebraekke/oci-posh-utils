@@ -10,19 +10,32 @@ Will return as Base64 encoded or as plain text depending on parameter AsPlainTex
 OCID of secret stored in the vault. 
 
 .PARAMETER AsPlainText
-Boolean that determines if secret is returned as plain text or as base6 encoded.
+Boolean that determines if secret is returned as plain text or as base64 encoded.
 Default is $true. 
+
+.PARAMETER AsFile 
+Boolean that determines if secret is returned as value or stored in (temp)file and full file name is returned.  
+Default is $false. 
 
 .EXAMPLE
 ## Successfully getting a secret into a local variable. Return value is plain text. 
+
 > my_secret = Get-OpuSecret -SecretId $sshkey_ocid
 
 .EXAMPLE
 ## Successfully getting a secret into a local variable. Return value is base64 encode. 
+
 > my_secret = Get-OpuSecret -SecretId $sshkey_ocid -AsPlainTExt $false
 
 .EXAMPLE 
+## Retrieve secret as plaintext and store in file in the temporary area. 
+
+❯ Get-OpuSecret -SecretId $sshkey_ocid -AsFile $true -AsPlainText $true
+C:\Users\espenbr\AppData\Local\Temp\tmpbqwj45.tmp
+
+.EXAMPLE 
 ## Trying retrieve a non existing secret.
+
 > $my_secret = Get-OpuSecret -SecretId $invalid_secret_id
 Exception: C:\Users\espenbr\GitHub\oci-posh-utils\public\ps1\get-opusecret.ps1:59
 Line |
@@ -46,12 +59,14 @@ function Get-OpuSecret {
         [Parameter(Mandatory, HelpMessage='OCID of secret to retrieve')]
         [String]$SecretId,
         [Parameter(HelpMessage='Return as plaintex ($true)')]
-        [bool]$AsPlainText=$true
+        [bool]$AsPlainText=$true,
+        [Parameter(HelpMessage='Create file and return as filename ($false)')]
+        [bool]$AsFile=$false
     )
 
     try {
         ## START: generic section 
-        $UserErrorActionPreference = $ErrorActionPreference
+        $userErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = "Stop" 
         ## END: generic section
         
@@ -60,7 +75,7 @@ function Get-OpuSecret {
         ## Import the modules needed here
         Import-Module OCI.PSModules.Secrets
 
-        Write-Verbose "Get-OpuSecret: Getting the SSH key from the secrets vault"
+        Write-Verbose "Get-OpuSecret: Getting the secret from the secrets vault"
 
         ## Get secret bundle based on ocid 
         try {
@@ -70,7 +85,7 @@ function Get-OpuSecret {
             throw "Get-OCISecretsSecretBundle: $_"
         }
 
-        ## Get base6 encoded secret from bundle
+        ## Get base64 encoded secret from bundle
         $secretBase64 = $secretBundle.SecretBundleContent.Content
  
         if ($true -eq $AsPlainText) {
@@ -81,8 +96,17 @@ function Get-OpuSecret {
             $secret = $secretBase64
         }
 
-        ## return secret
-        $secret
+        ## Secret defined, return as value or create file and return name 
+        if ($true -eq $AsFile) {
+            $tmpFile = New-TemporaryFile 
+            $secret | Out-File -FilePath $tmpFile
+
+            $tmpFile.FullName
+        } 
+        else { 
+            ## return secret
+            $secret
+        }
 
     } catch {
         ## Pass exception on back
@@ -90,11 +114,7 @@ function Get-OpuSecret {
     } finally {
         Write-Verbose "Get-OpuSecret: end"
 
-        ## To Maximize possible clean ups, continue on error 
-        $ErrorActionPreference = "Continue"
-    
         ## Done, restore settings
         $ErrorActionPreference = $userErrorActionPreference
     }
-
 }

@@ -37,7 +37,7 @@ Defaults to 0, means that it will be randomly assigned.
 Error thrown if requesting a port number lower than 1024.
 NOTE:
 If a specific port is requested and the call is part of a pipeline,
-the command will fail.
+each "instance" will receive a unique local port starting with value given.
 
 .PARAMETER WaitForConnectSeconds
 How many seconds to wait for connection to be established before returning. 
@@ -82,6 +82,52 @@ SShProcess     : System.Diagnostics.Process (Idle)
 LocalPort      : 9043
 Target         : 10.0.1.249:3306
 SessionExpires : 16.10.2025 13:49:06
+
+.EXAMPLE 
+## Create multiple forwarding sessions to the (same) default target port, starting at port 9003. 
+
+❯ $ip_address_list
+10.0.1.128
+10.0.1.161
+10.0.1.30
+
+$bastion_session_list = $ip_address_list | New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -LocalPort 9003
+
+Creating ephemeral key pair
+Creating Port Forwarding Session to 10.0.1.128:22
+Waiting for creation of bastion session to complete
+Creating SSH tunnel
+Waiting for creation of SSH tunnel to complete
+Creating ephemeral key pair
+Creating Port Forwarding Session to 10.0.1.161:22
+Waiting for creation of bastion session to complete
+Creating SSH tunnel
+Waiting for creation of SSH tunnel to complete
+Creating ephemeral key pair
+Creating Port Forwarding Session to 10.0.1.30:22
+Waiting for creation of bastion session to complete
+Creating SSH tunnel
+Waiting for creation of SSH tunnel to complete
+
+❯ $bastion_session_list
+
+BastionSession : Oci.BastionService.Models.Session
+SShProcess     : System.Diagnostics.Process (Idle)
+LocalPort      : 9003
+Target         : 10.0.1.128:22
+SessionExpires : 20.10.2025 12:24:05
+
+BastionSession : Oci.BastionService.Models.Session
+SShProcess     : System.Diagnostics.Process (Idle)
+LocalPort      : 9004
+Target         : 10.0.1.161:22
+SessionExpires : 20.10.2025 12:24:46
+
+BastionSession : Oci.BastionService.Models.Session
+SShProcess     : System.Diagnostics.Process (Idle)
+LocalPort      : 9005
+Target         : 10.0.1.30:22
+SessionExpires : 20.10.2025 12:25:28
 #>
 function New-OpuPortForwardingSessionFull {
     param (
@@ -96,14 +142,16 @@ function New-OpuPortForwardingSessionFull {
         [Int32]$WaitForConnectSeconds=10
     )
 
-    ## TODO: Set variable in begin to create counter across to allow for fixed LocalPort
     begin {
         ## START: generic section 
-        $UserErrorActionPreference = $ErrorActionPreference
+        $globalUserErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = "Stop" 
         ## END: generic section
 
         Write-Verbose "New-OpuPortForwardingSessionFull: begin"
+
+        ## "Iterator" for assigning fixed port numbers 
+        $globalCount = 0
     }
 
     process {
@@ -120,13 +168,11 @@ function New-OpuPortForwardingSessionFull {
                 throw "LocalPort is ${LocalPort}: must be 1024 or greater!"
             } 
             else {
-                ## Cannot ask for specific port in pipeline mode 
-                if ($PSCmdlet.MyInvocation.PipelinePosition -gt 0) {
-                    throw "CmdLet part of pipeline, fixed LocalPort is not allowed"
-                }
-                $useThisPort = $LocalPort
+                ## Add "position" of process/instance to accomodate for static assgnment on a list of IP addresses
+                $useThisPort = $LocalPort + $globalCount
+                $globalCount++
             }
-            Write-Host "Will use local port: ${useThisPort} "
+            Write-Verbose "Will use local port: ${useThisPort} "
 
             ## check that mandatory sw is installed    
             Test-OpuSshAvailable
@@ -235,13 +281,11 @@ function New-OpuPortForwardingSessionFull {
             throw "New-OpuPortForwardingSessionFull: $_"
         }
         finally {
-
             ## To Maximize possible clean ups, continue on error, fail silently
+            $userErrorActionPreference = $ErrorActionPreference
             $ErrorActionPreference = 'SilentlyContinue' 
             Remove-Item $keyFile -ErrorAction SilentlyContinue
             Remove-Item "${keyFile}.pub" -ErrorAction SilentlyContinue
-    
-            ## Done, restore settings
             $ErrorActionPreference = $userErrorActionPreference
         }
     }
@@ -250,7 +294,7 @@ function New-OpuPortForwardingSessionFull {
         Write-Verbose "New-OpuPortForwardingSessionFull: end"
 
         ## Done, restore settings
-        $ErrorActionPreference = $userErrorActionPreference
+        $ErrorActionPreference = $globalUserErrorActionPreference
     }    
 
 }

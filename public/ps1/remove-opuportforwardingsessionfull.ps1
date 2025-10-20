@@ -45,8 +45,8 @@ function Remove-OpuPortForwardingSessionFull {
 
     begin {
         ## START: generic section 
-        $UserErrorActionPreference = $ErrorActionPreference
-        $ErrorActionPreference = "Stop" 
+        $globalUserErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Continue" 
         ## END: generic section
 
         Write-Verbose "Remove-OpuPortForwardingSessionFull: begin"
@@ -72,7 +72,7 @@ function Remove-OpuPortForwardingSessionFull {
         Write-Verbose "Remove-OpuPortForwardingSessionFull: end"
 
         ## Done, restore settings
-        $ErrorActionPreference = $userErrorActionPreference
+        $ErrorActionPreference = $globalUserErrorActionPreference
     }    
     
 }
