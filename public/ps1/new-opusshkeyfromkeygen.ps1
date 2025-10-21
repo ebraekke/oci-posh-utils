@@ -56,12 +56,18 @@ function New-OpuSshKeyFromKeygen {
         $tmpDir = Get-TempDir
         $keyFile = -join ("${tmpDir}/", $KeyBaseName) 
 
+        ## throw error if file exists
+        if (Test-Path -Path $keyFile) {
+            throw "${keyFile} already exists."
+        }
+
+        ## TODO: Validate that it is the same on all platforms ... 
         try {
             if ($IsWindows) {
                 ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' 
             }
             elseif ($IsLinux) {
-                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '""' 
+                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' 
             }
             else {
                 throw "Platform not supported ... how did you get here?"
@@ -69,11 +75,6 @@ function New-OpuSshKeyFromKeygen {
         }
         catch {
             throw "ssh-keygen: $_"
-        }
-
-        ## Make sure to set as rw for owner 
-        if (($IsLinux) -or ($IsMacOS))  {
-            chmod 0600 $sshKey
         }
 
         $keyFile
@@ -85,12 +86,6 @@ function New-OpuSshKeyFromKeygen {
 
     } finally {
         Write-Verbose "New-OpuSshKeyFromKeygen: end"
-
-        ## START: generic section
-        ## To Maximize possible clean ups, continue on error 
-        $ErrorActionPreference = "Continue"
-
-        ## More here? 
 
         ## Done, restore settings
         $ErrorActionPreference = $userErrorActionPreference

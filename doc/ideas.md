@@ -1,4 +1,10 @@
 
+### Clone in OCI CloudShell 
+
+```powershell
+git clone --depth 1 git@github.com:ebraekke/oci-posh-utils.git
+```
+
 ## Output from terraform 
 
 ```powershell
