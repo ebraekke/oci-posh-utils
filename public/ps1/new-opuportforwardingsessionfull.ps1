@@ -242,7 +242,9 @@ function New-OpuPortForwardingSessionFull {
             $sshArgs = $sshArgs.replace("ssh", "-4")    ## avoid "bind: Cannot assign requested address" 
             $sshArgs = $sshArgs.replace("<privateKey>", $keyFile)
             $sshArgs = $sshArgs.replace("<localPort>", $useThisPort)
-            $sshArgs += " -o StrictHostKeyChecking=no"
+            ## TODO: add parametrs for accepting specific keys, currently in $HOME/.ssh/config 
+            ## 120 * 90 = 10 800 secs => 3hrs which is bastion TTL max
+            $sshArgs += " -o StrictHostKeyChecking=no -o ServerAliveInterval=120 -o ServerAliveCountMax=90 "
 
             Write-Verbose "CONN: ssh ${sshArgs}"
 
