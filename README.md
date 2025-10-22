@@ -62,89 +62,18 @@ foreach ($target in $bastion_session_list) {
 }
 ```
 
-### Longer version 
-
-Assign value to local variable for id of bastion in your network and for secret in vault holding SSH key:
+or just one, I know it is on 9003, but address into list.
 ```powershell
-$bastion_ocid='xyz...'
-$sshkey_ocid='xyz...'
+$localPort =$bastion_session_list[0].LocalPort 
+fab --hosts opc@127.0.0.1:${localPort} -i $file_name runMysqlInstaller --newpassword=${mysql_password}
 ```
 
-Get Json output from Terraform for the compute nodes you want to reach. 
-Convert and assign to string.
+Then finally, apply config changes
 ```powershell
-❯ terraform output -json ip_addresses
-["10.0.1.128","10.0.1.161","10.0.1.30"]
-
-> $ip_address_list = '["10.0.1.128","10.0.1.161","10.0.1.30"]' | ConvertFrom-Json
-
-❯ $ip_address_list
-10.0.1.128
-10.0.1.161
-10.0.1.30
+$localPort =$bastion_session_list[0].LocalPort 
+fab --hosts opc@127.0.0.1:${localPort} -i $file_name configureMysqlSettings --password=${mysql_password}
 ```
 
-Get SSH key secret from Vault: 
-```powershell
-> $file_name=Get-OpuSecret -SecretId $sshkey_ocid -AsFile $true -AsPlainText $true
-
-❯ $file_name
-C:\Users\espenbr\AppData\Local\Temp\tmpoucdv2.tmp
-```
-
-Invoke cmdlet for bastion session creation using pipeline syntax  
-```powershell
-> $bastion_session_list = $ip_address_list | New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -LocalPort 9003
-
-Creating ephemeral key pair
-Creating Port Forwarding Session to 10.0.1.128:22
-Waiting for creation of bastion session to complete
-Creating SSH tunnel
-Waiting for creation of SSH tunnel to complete
-Creating ephemeral key pair
-Creating Port Forwarding Session to 10.0.1.161:22
-Waiting for creation of bastion session to complete
-Creating SSH tunnel
-Waiting for creation of SSH tunnel to complete
-Creating ephemeral key pair
-Creating Port Forwarding Session to 10.0.1.30:22
-Waiting for creation of bastion session to complete
-Creating SSH tunnel
-Waiting for creation of SSH tunnel to complete
-```
-
-Verify contents of session list
-```powershell
-❯ $bastion_session_list
-
-BastionSession : Oci.BastionService.Models.Session
-SShProcess     : System.Diagnostics.Process (Idle)
-LocalPort      : 9003
-Target         : 10.0.1.128:22
-SessionExpires : 20.10.2025 18:22:25
-
-BastionSession : Oci.BastionService.Models.Session
-SShProcess     : System.Diagnostics.Process (Idle)
-LocalPort      : 9004
-Target         : 10.0.1.161:22
-SessionExpires : 20.10.2025 18:23:07
-
-BastionSession : Oci.BastionService.Models.Session
-SShProcess     : System.Diagnostics.Process (Idle)
-LocalPort      : 9005
-Target         : 10.0.1.30:22
-SessionExpires : 20.10.2025 18:23:49
-```
-
-Now, connect to local ports to validate.
-In this case we use fab command line tool from Fabric, the Python tool. 
-
-```powershell
-fab --hosts opc@127.0.0.1:9003,opc@127.0.0.1:9004,opc@127.0.0.1:9005 -i $file_name -- 'hostname'
-db2
-db1
-db3
-```
 
 ## Remember
 
