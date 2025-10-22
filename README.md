@@ -50,7 +50,7 @@ foreach ($target in $bastion_session_list) {
 
 Install and configure MySQL
 ```powershell
-$mysql_password = Get-OpuSecret -SecretId <SecretId> -AsPlainText $true -AsFile $false
+$mysql_password = Get-OpuSecret -SecretId $mysql_secret_ocid -AsPlainText $true -AsFile $false
 
 foreach ($target in $bastion_session_list) {
     $localPort =$target.LocalPort 
@@ -145,12 +145,20 @@ db3
 ## Remember
 
 ```powershell
-Get-Command -Module oci-posh-utils
+❯ Get-Command -Module oci-posh-utils
 
 CommandType     Name                                               Version    Source
 -----------     ----                                               -------    ------
-Function        Test-OpuMysqlshAvailable                           0.0        oci-posh-utils
-Function        Test-OpuSqlclAvailable                             0.0        oci-posh-utils
-Function        Test-OpuSshAvailable                               0.0        oci-posh-utils
+Function        Get-OpuSecret                                      0.9        oci-posh-utils
+Function        New-OpuPortForwardingSessionFull                   0.9        oci-posh-utils
+Function        New-OpuSshKeyFromKeygen                            0.9        oci-posh-utils
+Function        New-OpuSshKeyFromSecret                            0.9        oci-posh-utils
+Function        Remove-OpuPortForwardingSessionFull                0.9        oci-posh-utils
+Function        Test-OpuMongoshAvailable                           0.9        oci-posh-utils
+Function        Test-OpuMysqlshAvailable                           0.9        oci-posh-utils
+Function        Test-OpuPipeLine                                   0.9        oci-posh-utils
+Function        Test-OpuPortForwardingSessionFull                  0.9        oci-posh-utils
+Function        Test-OpuSqlclAvailable                             0.9        oci-posh-utils
+Function        Test-OpuSshAvailable                               0.9        oci-posh-utils
 ```
 

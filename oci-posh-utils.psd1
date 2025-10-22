@@ -9,10 +9,10 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = 'oci-posh-utils.psm1'
+RootModule = "${PSScriptRoot}/private/psm1/oci-posh-utils.psm1"
 
 # Version number of this module.
-ModuleVersion = '1.0'
+ModuleVersion = '0.9'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()

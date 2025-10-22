@@ -63,7 +63,7 @@ try {
     $UserErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Stop" 
 
-    Import-Module "${PSScriptRoot}/../oci-posh-utils.psm1"
+    Import-Module "${PSScriptRoot}/../oci-posh-utils.psd1"
     ## END: generic section
 
     ## Create session and process, get information in custom object -- see below
