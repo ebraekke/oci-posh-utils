@@ -8,6 +8,10 @@ Code structure inspired by
 https://www.psplaybook.com/2025/02/06/powershell-modules-best-practices/
 
 
+Import the psd1 to get 
+```
+
+```
 ## User guide sample 
 
 ### Super short

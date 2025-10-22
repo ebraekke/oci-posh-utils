@@ -9,7 +9,7 @@ Foreach($import in @($Private))
     Try
     {
         . $import.fullname
-        Out-Host -InputObject "DEBUG dot sourced: $($import.fullname)"
+        Write-Verbose "Dot sourced: $($import.fullname)"
     }
     Catch
     {
@@ -28,7 +28,7 @@ Foreach($import in @($Public))
     }
     Catch
     {
-        Write-Error -Message "Failed to import public function $($import.fullname): $_"
+        throw "Failed to import public function $($import.fullname): $_"
     }
     ## NOTE: 
     ## You **can** export functions that are not in scope/visible (without error being thrown)!
@@ -36,22 +36,21 @@ Foreach($import in @($Public))
     ##   (1) if the function has a different name than the (base part of the) file.
     ##   OR
     ##   (2) the file exists, but is is empty.
-    ## Hence, the Out-Host in the block below. 
     ## If you are experiencing any problems, 
-    ## validate DEBUG output versus the output of "Get-Command -Module oci-posh-utils"
+    ## validate -verbose output versus the output of "Get-Command -Module oci-posh-utils"
     Try
     {
         $exportThis = (Get-ChildItem $import).BaseName
         Export-ModuleMember -Function $exportThis
-        Out-Host -InputObject "DEBUG Export-ModuleMember -Function ${exportThis}"
         $exportedCount++
     }
     Catch
     {
-        Write-Error -Message "Export-ModuleMember -Function ${exportThis}: $_"
+        throw "Export-ModuleMember -Function ${exportThis}: $_"
     }
 }
 
+## This is also a sanity check if paths are correctly resolved
 if (0 -eq $exportedCount) {
     throw "No public functions, aborting"
 }
