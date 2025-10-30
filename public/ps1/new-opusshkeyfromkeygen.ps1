@@ -69,8 +69,11 @@ function New-OpuSshKeyFromKeygen {
             elseif ($IsLinux) {
                 ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' 
             }
+            elseif ($IsMacOs) {
+                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' 
+            }
             else {
-                throw "Platform not supported ... how did you get here?"
+                throw "This should not be possible ... how did you get here?"
             }
         }
         catch {

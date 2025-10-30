@@ -7,7 +7,7 @@ function Get-TempDir {
         return "/tmp"
     }     
     elseif ($IsMacOS) {
-        throw "Get-TempDir: Currently no support for MacOS"
+        return "/tmp"
     } 
     else {
         ## This should *NOT* happen!
