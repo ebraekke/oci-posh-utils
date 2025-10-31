@@ -256,6 +256,12 @@ function New-OpuPortForwardingSessionFull {
                 elseif ($IsLinux) {
                     $sshProcess = Start-Process -FilePath "ssh" -ArgumentList $sshArgs -PassThru -ErrorAction Stop
                 }
+                elseif ($IsMacOS) {
+                    $sshProcess = Start-Process -FilePath "ssh" -ArgumentList $sshArgs -PassThru -ErrorAction Stop
+                } 
+                else {
+                    throw "Unkown OS,  how did you get here?"
+                }
             }
             catch {
                 throw "Start-Process: $_"
