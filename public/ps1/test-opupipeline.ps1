@@ -3,7 +3,7 @@
 https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-pscustomobject?view=powershell-7.5
 
         $localBastionSession = [PSCustomObject]@{
-            PSTypeName = 'OpuBastionSession.Object'
+            PSTypeName = 'OpuPortBastionSession.Object'
             BastionSession = $bastionSession
             SShProcess = $sshProcess
             LocalPort = $localPort
@@ -17,7 +17,7 @@ function Test-OpuPipeLine {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory, ValueFromPipeline=$true)]
-        [PSTypeName('OpuBastionSession.Object')]$BastionSession,
+        [PSTypeName('OpuPortBastionSession.Object')]$BastionSession,
         [Parameter(Mandatory, HelpMessage='OCID of secret holding the SSH key')]
         [String]$SecretId
     )

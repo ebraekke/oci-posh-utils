@@ -9,7 +9,7 @@ If more than one session object is given, the verfification process will throw a
 .PARAMETER BastionSessionDescription
 
 $BastionSessionDescription = [PSCustomObject]@{
-    PSTypeName = 'OpuBastionSession.Object'
+    PSTypeName = 'OpuPortBastionSession.Object'
     BastionSession = $bastionSession
     SShProcess = $sshProcess
     LocalPort = $localPort
@@ -49,7 +49,7 @@ Line |
 function Test-OpuPortForwardingSessionFull {
     param (
         [Parameter(Mandatory, ValueFromPipeline=$true, HelpMessage='Full Bastion Port Forwarding Session Description Object')]
-        [PSTypeName('OpuBastionSession.Object')]$BastionSessionDescription
+        [PSTypeName('OpuPortBastionSession.Object')]$BastionSessionDescription
     )
 
     begin {

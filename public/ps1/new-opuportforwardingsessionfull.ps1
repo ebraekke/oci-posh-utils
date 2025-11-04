@@ -7,7 +7,7 @@ Create the actual port forwarding SSH process.
 Return an object to the caller:
 
 $bastionSessionDescription = [PSCustomObject]@{
-    PSTypeName = 'OpuBastionSession.Object'
+    PSTypeName = 'OpuPortBastionSession.Object'
     BastionSession = $bastionSession
     SShProcess = $sshProcess
     LocalPort = $useThisPort
@@ -242,8 +242,6 @@ function New-OpuPortForwardingSessionFull {
             $sshArgs = $sshArgs.replace("ssh", "-4")    ## avoid "bind: Cannot assign requested address" 
             $sshArgs = $sshArgs.replace("<privateKey>", $keyFile)
             $sshArgs = $sshArgs.replace("<localPort>", $useThisPort)
-            ## TODO: add parametrs for accepting specific keys, currently in $HOME/.ssh/config 
-            ## 120 * 90 = 10 800 secs => 3hrs which is bastion TTL max
             $sshArgs += " -o StrictHostKeyChecking=no -o ServerAliveInterval=120 -o ServerAliveCountMax=90 "
 
             Write-Verbose "CONN: ssh ${sshArgs}"
@@ -271,7 +269,7 @@ function New-OpuPortForwardingSessionFull {
             ##
             ## Create return Object
             $localBastionSession = [PSCustomObject]@{
-                PSTypeName     = 'OpuBastionSession.Object'
+                PSTypeName     = 'OpuPortBastionSession.Object'
                 BastionSession = $bastionSession
                 SShProcess     = $sshProcess
                 LocalPort      = $useThisPort

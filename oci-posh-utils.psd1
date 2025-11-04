@@ -12,7 +12,7 @@
 RootModule = "${PSScriptRoot}/private/psm1/oci-posh-utils.psm1"
 
 # Version number of this module.
-ModuleVersion = '0.9'
+ModuleVersion = '0.7'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()

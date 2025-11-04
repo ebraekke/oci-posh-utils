@@ -1,7 +1,13 @@
 
-### Clone in OCI CloudShell 
+## Add managed 
 
-```powershell
+Use <COMMAND>+I to trigger sugegstions. 
+
+
+ 
+CreateManagedSshSessionTargetResourceDetails
+
+### Clone in OCI CloudShell 
 git clone --depth 1 git@github.com:ebraekke/oci-posh-utils.git
 ```
 
@@ -43,3 +49,4 @@ Processing 10.0.1.171
     Write-Host "Age: $($jsonObject.Age)"
 
 ```
+

@@ -95,3 +95,7 @@ Function        Test-OpuSqlclAvailable                             0.9        oc
 Function        Test-OpuSshAvailable                               0.9        oci-posh-utils
 ```
 
+## Tidbits 
+
+Q: Why ips and not (dns)names? 
+A: The BAstion servicse only allows for ip addresses.
