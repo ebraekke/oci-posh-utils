@@ -1,24 +1,23 @@
 <#
-Creating Manged SSH Session to 10.0.1.159:22
-Exception: /Users/espenbr/GitHub/oci-posh-utils/public/ps1/new-opumanagedsshsessionfull.ps1:138
+Exception: /Users/espenbr/GitHub/oci-posh-utils/public/ps1/new-opumanagedsshsessionfull.ps1:140
 Line |
- 138 |              throw "New-OpuManagedSshSessionFull: $_"
+ 140 |              throw "New-OpuManagedSshSessionFull: $_"
      |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      | New-OpuManagedSshSessionFull: New-OciBastionSession: Error returned by Bastion Service. Http Status Code: 400. ServiceCode:
      | InvalidParameter. OpcRequestId:
-     | oci-FA19ED38DB7A00F-202511041310/C9EADD20D7EDF6875AFB0969465241AB/FFA107133394540982660DF159673420. Message: You must
-     | provide a valid target compute instance OCID (targetResourceId) to create a managed SSH session. The instance OCID must be
-     | a string value and cannot exceed 255 characters. Operation Name: CreateSession TimeStamp: 2025-11-04T14:10:50.326Z Client
-     | Version: Oracle-DotNetSDK/122.0.0 (Unix/15.7.1; .NET 9.0.10)  Oracle-PowerShell/118.0.0  Request Endpoint: POST
-     | https://bastion.eu-frankfurt-1.oci.oraclecloud.com/20210331/sessions For details on this operation's requirements, see
-     | https://docs.oracle.com/iaas/api/#/en/bastion/20210331/Session/CreateSession. Get more information on a failing request by
-     | using the -Verbose or -Debug flags. See
+     | oci-64C360387C63FA3-202511041701/C8F03257005891A278310A6946524123/57491B58CD2BA8D6C4D5DA607091DBBF. Message: To create a
+     | Managed SSH session, the Bastion plugin must be in the RUNNING state on the target instance, but the plugin is not running
+     | on ocid1.instance.oc1.eu-frankfurt-1.antheljt3gkdkiacxz76jwglc2nb2taejxpnt5yobndzet6u5csvxqiidokq. Enable the Bastion
+     | plugin on the target instance before creating the session. Operation Name: CreateSession TimeStamp:
+     | 2025-11-04T18:01:45.056Z Client Version: Oracle-DotNetSDK/122.0.0 (Unix/15.7.1; .NET 9.0.10)  Oracle-PowerShell/118.0.0 
+     | Request Endpoint: POST https://bastion.eu-frankfurt-1.oci.oraclecloud.com/20210331/sessions For details on this operation's
+     | requirements, see https://docs.oracle.com/iaas/api/#/en/bastion/20210331/Session/CreateSession. Get more information on a
+     | failing request by using the -Verbose or -Debug flags. See
      | https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/powershellconcepts.htm#powershellconcepts_topic_logging For more
      | information about resolving this error, see
      | https://docs.oracle.com/en-us/iaas/Content/API/References/apierrors.htm#apierrors_400__400_invalidparameter If you are
      | unable to resolve this Bastion issue, please contact Oracle support and provide them this full error message.
 
-Need to publish ocids of hosts as weel ass IPs when creating
 #>
 function New-OpuManagedSshSessionFull {
     param (
@@ -29,8 +28,8 @@ function New-OpuManagedSshSessionFull {
         [String]$TargetHostId,
     	[Parameter(HelpMessage='User to connect at target (opc)')]
     	[String]$OsUser="opc",
-        [Parameter(HelpMessage='Seconds to wait before returing the session to the caller')]
-        [Int32]$WaitForConnectSeconds=10
+    	[Parameter(HelpMessage='Use this keyfile to connect to target ($null)')]
+    	[String]$TargetKeyFile=$null
     )
 
     begin {
@@ -49,11 +48,6 @@ function New-OpuManagedSshSessionFull {
         try {
             ## check that mandatory sw is installed    
             Test-OpuSshAvailable
-
-            ## Validate input
-            if ((5 -gt $WaitForConnectSeconds) -or (60 -lt $WaitForConnectSeconds)) {
-                throw "WaitForConnectSeconds is ${WaitForConnectSeconds}: must to be between 5 and 60!"
-            }
 
             ## Import modules
             Import-Module OCI.PSModules.Bastion
@@ -121,7 +115,9 @@ function New-OpuManagedSshSessionFull {
 
             # Replace second occurence of -i
             $sshArgs = $sshArgs.replace("ProxyCommand=`"ssh -i <privateKey>", "ProxyCommand=`"ssh -i ${keyFile}") 
-            
+            if ($null -ne $TargetKeyFile) {
+                $sshArgs = $sshArgs.Replace("<privateKey>", $TargetKeyFile)
+            }
             <#
             ## Supply relevant parameters
             $sshArgs = $sshArgs.replace("ssh", "-4")    ## avoid "bind: Cannot assign requested address" 
