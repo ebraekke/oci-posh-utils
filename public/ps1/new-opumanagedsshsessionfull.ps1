@@ -24,9 +24,11 @@ function New-OpuManagedSshSessionFull {
     param (
         [Parameter(Mandatory, HelpMessage='OCID of Bastion')]
         [String]$BastionId, 
-        [Parameter(Mandatory, ValueFromPipeline=$true, HelpMessage='IP address of target host')]
-        [String]$TargetHost,
         [Int32]$TargetPort=22,
+        [Parameter(Mandatory,HelpMessage='OCID of target host')]
+        [String]$TargetHostId,
+    	[Parameter(HelpMessage='User to connect at target (opc)')]
+    	[String]$OsUser="opc",
         [Parameter(HelpMessage='Seconds to wait before returing the session to the caller')]
         [Int32]$WaitForConnectSeconds=10
     )
@@ -62,7 +64,7 @@ function New-OpuManagedSshSessionFull {
             $rand = Get-Random -Minimum 9001 -Maximum 9099
             $keyFile= New-OpuSshKeyFromKeygen -KeyBaseName (-join ("bastionkey-", "${now}-${rand}"))
 
-            Write-Host "Creating Manged SSH Session to ${TargetHost}:${TargetPort}"
+            Write-Host "Creating Manged SSH Session to ${TargetHostId}:${TargetPort}"
 
             try {
                 $bastionService = Get-OCIBastion -BastionId $BastionId  -WaitForLifecycleState Active -WaitIntervalSeconds 0 -ErrorAction Stop
@@ -74,8 +76,8 @@ function New-OpuManagedSshSessionFull {
 
             ## Details of target
             $TargetResourceDetails                                        = New-Object -TypeName 'Oci.BastionService.Models.CreateManagedSshSessionTargetResourceDetails'
-            $TargetResourceDetails.TargetResourceOperatingSystemUserName  = "opc"
-            $TargetResourceDetails.TargetResourcePrivateIpAddress         = $TargetHost
+            $TargetResourceDetails.TargetResourceOperatingSystemUserName  = $OsUser
+            $TargetResourceDetails.TargetResourceId                       = $TargetHostId
 
             ## Details of keyfile
             $keyDetails = New-Object -TypeName 'Oci.bastionService.Models.PublicKeyDetails'
@@ -83,7 +85,7 @@ function New-OpuManagedSshSessionFull {
 
             ## The actual session, name matches ephemeral key(s)
             $sessionDetails = New-Object -TypeName 'Oci.bastionService.Models.CreateSessionDetails'
-            $sessionDetails.DisplayName = -join ("BastionSession-${now}-${useThisPort}")
+            $sessionDetails.DisplayName = -join ("BastionSession-${now}-${rand}")
             $sessionDetails.SessionTtlInSeconds = $maxSessionTtlInSeconds
             $sessionDetails.BastionId = $BastionId
             $sessionDetails.KeyType = "PUB"
@@ -108,6 +110,8 @@ function New-OpuManagedSshSessionFull {
             ## Create ssh command argument
             $sshArgs = $bastionSession.SshMetadata["command"]
 
+            Write-Verbose "SSH args pre: ${sshArgs}"
+
             ## First clean up any comments from Oracle(!)
             $hashPos = $sshArgs.IndexOf('#')
             if ($hashPos -gt 0) {
@@ -115,39 +119,24 @@ function New-OpuManagedSshSessionFull {
                 $sshArgs = $sshArgs.Remove($hashPos, $strlen - $hashPos)
             }
 
+            # Replace second occurence of -i
+            $sshArgs = $sshArgs.replace("ProxyCommand=`"ssh -i <privateKey>", "ProxyCommand=`"ssh -i ${keyFile}") 
+            
+            <#
             ## Supply relevant parameters
             $sshArgs = $sshArgs.replace("ssh", "-4")    ## avoid "bind: Cannot assign requested address" 
             $sshArgs = $sshArgs.replace("<privateKey>", $keyFile)
             $sshArgs = $sshArgs.replace("<localPort>", $useThisPort)
             $sshArgs += " -o StrictHostKeyChecking=no -o ServerAliveInterval=120 -o ServerAliveCountMax=90 "
-
-            Write-Verbose "CONN: ssh ${sshArgs}"
-
-            Write-Host "Creating SSH tunnel"
-            try {
-                if ($IsWindows) {
-                    $sshProcess = Start-Process -FilePath "ssh" -ArgumentList $sshArgs -WindowStyle Hidden -PassThru -ErrorAction Stop
-                }
-                elseif ($IsLinux) {
-                    $sshProcess = Start-Process -FilePath "ssh" -ArgumentList $sshArgs -PassThru -ErrorAction Stop
-                }
-                elseif ($IsMacOS) {
-                    $sshProcess = Start-Process -FilePath "ssh" -ArgumentList $sshArgs -PassThru -ErrorAction Stop
-                } 
-                else {
-                    throw "Unkown OS,  how did you get here?"
-                }
-            }
-            catch {
-                throw "Start-Process: $_"
-            }
+#>
 
             ## Create return Object
             $localBastionSession = [PSCustomObject]@{
                 PSTypeName     = 'OpuManagedBastionSession.Object'
                 BastionSession = $bastionSession
-                SShProcess     = $sshProcess
-                Target         = "${TargetHost}:${TargetPort}"
+                SShArgs        = $sshArgs
+#               Target         = "${TargetHost}:${TargetPort}"
+                KeyFile        = $keyFile
                 SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds)
             }
 
@@ -159,10 +148,6 @@ function New-OpuManagedSshSessionFull {
         }
         finally {
             ## To Maximize possible clean ups, continue on error, fail silently
-            $userErrorActionPreference = $ErrorActionPreference
-            $ErrorActionPreference = 'SilentlyContinue' 
-            Remove-Item $keyFile -ErrorAction SilentlyContinue
-            Remove-Item "${keyFile}.pub" -ErrorAction SilentlyContinue
             $ErrorActionPreference = $userErrorActionPreference
         }
     }
