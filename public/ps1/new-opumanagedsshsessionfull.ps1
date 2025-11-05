@@ -1,4 +1,48 @@
 <#
+.SYNOPSIS
+Create a mamnaged SSH sesssion with OCI Bastion service.
+
+Return an object to the caller:
+
+$bastionSessionDescription = [PSCustomObject]@{
+    PSTypeName     = 'OpuManagedBastionSession.Object'
+    BastionSession = $bastionSession
+    SshArgs        = $sshArgs
+    KeyFile        = $keyFile
+    SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds)
+}
+
+The SshArgs parameter contains a formated SSH "connect" string that can be used directly with 
+anSSH client or as a target definition in SSH based tools like Ansible and PyInfra.   
+        
+.DESCRIPTION
+Creates a managed SSH session with the OCI Bastion Service.
+Requires that bastion plugin is installed on the agent *and* tha tis is running (there is a slight delay at create time).
+A path from the Bastion to the target is required.
+The Bastion session inherits TTL from the Bastion (instance). 
+
+.PARAMETER BastionId
+OCID of Bastion with wich to create a session. 
+ 
+.PARAMETER TargetHostId
+OCID of target host. 
+   
+.PARAMETER TargetPort
+Port number at TargetHost to create a session to. 
+Defaults to 22.  
+
+.PARAMETER OsUser
+Os user to connect to at target.
+Defaulst to "opc".
+
+.PARAMETER TargetKeyFile
+Name of keyfile that caller wishes to be merged with the output to form the SshArgs file. 
+
+.EXAMPLE 
+## Call to create managed session before agent has properly started.
+> $target_host1 = "ocid1....."
+> $bastion_session = $target_host1  | New-OpuManagedSshSessionFull -BastionId $bastion_ocid -TargetKeyFile /tmp/db-10610
+
 Exception: /Users/espenbr/GitHub/oci-posh-utils/public/ps1/new-opumanagedsshsessionfull.ps1:140
 Line |
  140 |              throw "New-OpuManagedSshSessionFull: $_"
@@ -24,7 +68,7 @@ function New-OpuManagedSshSessionFull {
         [Parameter(Mandatory, HelpMessage='OCID of Bastion')]
         [String]$BastionId, 
         [Int32]$TargetPort=22,
-        [Parameter(Mandatory,HelpMessage='OCID of target host')]
+        [Parameter(Mandatory, ValueFromPipeline=$true, HelpMessage='OCID of target host')]
         [String]$TargetHostId,
     	[Parameter(HelpMessage='User to connect at target (opc)')]
     	[String]$OsUser="opc",
@@ -113,25 +157,17 @@ function New-OpuManagedSshSessionFull {
                 $sshArgs = $sshArgs.Remove($hashPos, $strlen - $hashPos)
             }
 
-            # Replace second occurence of -i
+            ## Replace second occurence of -i
             $sshArgs = $sshArgs.replace("ProxyCommand=`"ssh -i <privateKey>", "ProxyCommand=`"ssh -i ${keyFile}") 
             if ($null -ne $TargetKeyFile) {
                 $sshArgs = $sshArgs.Replace("<privateKey>", $TargetKeyFile)
             }
-            <#
-            ## Supply relevant parameters
-            $sshArgs = $sshArgs.replace("ssh", "-4")    ## avoid "bind: Cannot assign requested address" 
-            $sshArgs = $sshArgs.replace("<privateKey>", $keyFile)
-            $sshArgs = $sshArgs.replace("<localPort>", $useThisPort)
-            $sshArgs += " -o StrictHostKeyChecking=no -o ServerAliveInterval=120 -o ServerAliveCountMax=90 "
-#>
 
             ## Create return Object
             $localBastionSession = [PSCustomObject]@{
                 PSTypeName     = 'OpuManagedBastionSession.Object'
                 BastionSession = $bastionSession
                 SShArgs        = $sshArgs
-#               Target         = "${TargetHost}:${TargetPort}"
                 KeyFile        = $keyFile
                 SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds)
             }

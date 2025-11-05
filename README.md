@@ -10,8 +10,18 @@ https://www.psplaybook.com/2025/02/06/powershell-modules-best-practices/
 
 Import the psd1 to get 
 ```
+Import-Module ./oci-posh-utils.psd1 
+```ƒ
 
-```
+While in test and continous (re)create/drop mdoe I wun with teh following `~./ssh/config` settings: 
+```shell
+host 10.0.*.* 
+	StrictHostKeyChecking no
+	UserKnownHostsFile=/dev/null
+	ServerAliveInterval 120
+  	ServerAliveCountMax 90
+````
+
 ## User guide sample 
 
 ### Super short
