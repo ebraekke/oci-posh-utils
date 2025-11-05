@@ -7,9 +7,14 @@ Return an object to the caller:
 $bastionSessionDescription = [PSCustomObject]@{
     PSTypeName     = 'OpuManagedBastionSession.Object'
     BastionSession = $bastionSession
-    SshArgs        = $sshArgs
-    KeyFile        = $keyFile
-    SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds)
+    SShArgs        = <fully formated ssh command>
+    KeyFile        = <key file generated for the session>
+    JumpUser       = <jump user for the session>
+    JumpHost       = <jump host for the session>
+    TargetUser     = <target user for the session>
+    TargetHost     = <target host for the session>
+    TargetPort     = <target port for the session<
+    SessionExpires = <SessionExpireTimeInLocalTime>
 }
 
 The SshArgs parameter contains a formated SSH "connect" string that can be used directly with 
@@ -41,7 +46,7 @@ Name of keyfile that caller wishes to be merged with the output to form the SshA
 .EXAMPLE 
 ## Call to create managed session before agent has properly started.
 > $target_host1 = "ocid1....."
-> $bastion_session = $target_host1  | New-OpuManagedSshSessionFull -BastionId $bastion_ocid -TargetKeyFile /tmp/db-10610
+> $bastion_session = $target_host1 | New-OpuManagedSshSessionFull -BastionId $bastion_ocid -TargetKeyFile /tmp/db-10610
 
 Exception: /Users/espenbr/GitHub/oci-posh-utils/public/ps1/new-opumanagedsshsessionfull.ps1:140
 Line |
@@ -65,15 +70,15 @@ Line |
 #>
 function New-OpuManagedSshSessionFull {
     param (
-        [Parameter(Mandatory, HelpMessage='OCID of Bastion')]
+        [Parameter(Mandatory, HelpMessage = 'OCID of Bastion')]
         [String]$BastionId, 
-        [Int32]$TargetPort=22,
-        [Parameter(Mandatory, ValueFromPipeline=$true, HelpMessage='OCID of target host')]
+        [Int32]$TargetPort = 22,
+        [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'OCID of target host')]
         [String]$TargetHostId,
-    	[Parameter(HelpMessage='User to connect at target (opc)')]
-    	[String]$OsUser="opc",
-    	[Parameter(HelpMessage='Use this keyfile to connect to target ($null)')]
-    	[String]$TargetKeyFile=$null
+        [Parameter(HelpMessage = 'User to connect at target (opc)')]
+        [String]$OsUser = "opc",
+        [Parameter(HelpMessage = 'Use this keyfile to connect to target ($null)')]
+        [String]$TargetKeyFile = $null
     )
 
     begin {
@@ -100,7 +105,7 @@ function New-OpuManagedSshSessionFull {
             Write-Host "Creating ephemeral key pair"
             $now = Get-Date -Format "yyyy_MM_dd_HH_mm_ss"
             $rand = Get-Random -Minimum 9001 -Maximum 9099
-            $keyFile= New-OpuSshKeyFromKeygen -KeyBaseName (-join ("bastionkey-", "${now}-${rand}"))
+            $keyFile = New-OpuSshKeyFromKeygen -KeyBaseName ( -join ("bastionkey-", "${now}-${rand}"))
 
             Write-Host "Creating Manged SSH Session to ${TargetHostId}:${TargetPort}"
 
@@ -113,9 +118,9 @@ function New-OpuManagedSshSessionFull {
             $maxSessionTtlInSeconds = $bastionService.MaxSessionTtlInSeconds
 
             ## Details of target
-            $TargetResourceDetails                                        = New-Object -TypeName 'Oci.BastionService.Models.CreateManagedSshSessionTargetResourceDetails'
-            $TargetResourceDetails.TargetResourceOperatingSystemUserName  = $OsUser
-            $TargetResourceDetails.TargetResourceId                       = $TargetHostId
+            $TargetResourceDetails = New-Object -TypeName 'Oci.BastionService.Models.CreateManagedSshSessionTargetResourceDetails'
+            $TargetResourceDetails.TargetResourceOperatingSystemUserName = $OsUser
+            $TargetResourceDetails.TargetResourceId = $TargetHostId
 
             ## Details of keyfile
             $keyDetails = New-Object -TypeName 'Oci.bastionService.Models.PublicKeyDetails'
@@ -159,8 +164,37 @@ function New-OpuManagedSshSessionFull {
 
             ## Replace second occurence of -i
             $sshArgs = $sshArgs.replace("ProxyCommand=`"ssh -i <privateKey>", "ProxyCommand=`"ssh -i ${keyFile}") 
+
+            ## Insert the reference to the caller's keyfile
             if ($null -ne $TargetKeyFile) {
                 $sshArgs = $sshArgs.Replace("<privateKey>", $TargetKeyFile)
+            }
+
+            ## Let's extract the data (user @ host) needed for the return object
+            try {
+                $pattern = '(?<user>[\w.-]+)@(?<host>[\w.-]+)'
+
+                # Get all matches
+                $allMatches = [regex]::Matches($sshArgs, $pattern)
+
+                if ($allMatches.Count -ge 2) {
+                    # The first match is the jump host (index 0)
+                    $jumpUser = $allMatches[0].Groups['user'].Value
+                    $jumpHost = $allMatches[0].Groups['host'].Value
+
+                    # The last match is the target host
+                    $targetUser = $allMatches[-1].Groups['user'].Value
+                    $targetHost = $allMatches[-1].Groups['host'].Value
+   
+                    Write-Verbose "JumpUser:   $jumpUser, JumpHost: $jumpHost"
+                    Write-Verbose "TargetUser: $targetUser, TargetHost: $targetHost"
+                }
+                else {
+                    throw "Extract of user @ host failed: Not enough user@host patterns found to identify both jump and target."
+                }
+            }
+            catch {
+                throw "Extract of user @ host failed: $_"
             }
 
             ## Create return Object
@@ -169,6 +203,11 @@ function New-OpuManagedSshSessionFull {
                 BastionSession = $bastionSession
                 SShArgs        = $sshArgs
                 KeyFile        = $keyFile
+                JumpUser       = $jumpUser
+                JumpHost       = $jumpHost
+                TargetUser     = $targetUser
+                TargetHost     = $targetHost
+                TargetPort     = $TargetPort
                 SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds)
             }
 
