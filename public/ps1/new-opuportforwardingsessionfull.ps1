@@ -21,11 +21,12 @@ This combo will allow you to connect through the Bastion service via a local por
 A path from the Bastion to the target is required.
 The Bastion session inherits TTL from the Bastion (instance). 
 
-.PARAMETER BastionId
-OCID of Bastion with wich to create a session. 
- 
 .PARAMETER TargetHost
 IP address of target host. 
+ValueFromPipeline = $true
+
+.PARAMETER BastionId
+OCID of Bastion with which to create a session.  
    
 .PARAMETER TargetPort
 Port number at TargetHost to create a session to. 
@@ -131,10 +132,10 @@ SessionExpires : 20.10.2025 12:25:28
 #>
 function New-OpuPortForwardingSessionFull {
     param (
-        [Parameter(Mandatory, HelpMessage='OCID of Bastion')]
-        [String]$BastionId, 
         [Parameter(Mandatory, ValueFromPipeline=$true, HelpMessage='IP address of target host')]
         [String]$TargetHost,
+        [Parameter(Mandatory, HelpMessage='OCID of Bastion')]
+        [String]$BastionId, 
         [Int32]$TargetPort=22,
         [Parameter(HelpMessage='Use this local port, 0 means assign')]
         [Int32]$LocalPort=0,

@@ -27,12 +27,13 @@ Requires that bastion plugin is installed on the agent *and* that it is running 
 A path from the Bastion to the target is required.
 The Bastion session inherits TTL from the Bastion (instance). 
 
-.PARAMETER BastionId
-OCID of Bastion with witch to create a session. 
- 
 .PARAMETER TargetHostId
 OCID of target host. 
-   
+ValueFromPipeline = $true
+
+.PARAMETER BastionId
+OCID of Bastion with whitch to create a session. 
+
 .PARAMETER TargetPort
 Port number at TargetHostId to create a session to. 
 Defaults to 22.  
@@ -71,11 +72,11 @@ Line |
 #>
 function New-OpuManagedSshSessionFull {
     param (
+        [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'OCID of target host')]
+        [String]$TargetHostId,
         [Parameter(Mandatory, HelpMessage = 'OCID of Bastion')]
         [String]$BastionId, 
         [Int32]$TargetPort = 22,
-        [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'OCID of target host')]
-        [String]$TargetHostId,
         [Parameter(HelpMessage = 'User to connect at target (opc)')]
         [String]$OsUser = "opc",
         [Parameter(HelpMessage = 'Merge in the name of this keyfile to SshArgs in return object ($null)')]
