@@ -23,26 +23,26 @@ such as Ansible and PyInfra.
         
 .DESCRIPTION
 Creates a managed SSH session with the OCI Bastion Service.
-Requires that bastion plugin is installed on the agent *and* tha tis is running (there is a slight delay at create time).
+Requires that bastion plugin is installed on the agent *and* that it is running (there is a slight delay at create time).
 A path from the Bastion to the target is required.
 The Bastion session inherits TTL from the Bastion (instance). 
 
 .PARAMETER BastionId
-OCID of Bastion with wich to create a session. 
+OCID of Bastion with witch to create a session. 
  
 .PARAMETER TargetHostId
 OCID of target host. 
    
 .PARAMETER TargetPort
-Port number at TargetHost to create a session to. 
+Port number at TargetHostId to create a session to. 
 Defaults to 22.  
 
 .PARAMETER OsUser
 Os user to connect to at target.
-Defaulst to "opc".
+Defaults to "opc".
 
 .PARAMETER TargetKeyFile
-Name of keyfile that caller wishes to be merged with the output to form the SshArgs file. 
+Name of keyfile that caller wishes to be merged into the output to form the SshCmd attribute of the return object. 
 
 .EXAMPLE 
 ## Call to create managed session before agent has properly started.
