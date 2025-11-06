@@ -31,7 +31,7 @@ $BastionSessionDescription = [PSCustomObject]@{
 
 function Remove-OpuManagedSshsessionFull {
     param (
-        [Parameter(Mandatory, ValueFromPipeline=$true, HelpMessage='Full Bastion Port Forwarding Session Description Object')]
+        [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'Full Bastion Port Forwarding Session Description Object')]
         [PSTypeName('OpuManagedBastionSession.Object')]$BastionSessionDescription
     )
 
@@ -54,17 +54,23 @@ function Remove-OpuManagedSshsessionFull {
         }
         catch {
             Write-Error "Remove-OpuManagesSshSessionFull: $_"
+        } 
+        finally {
+            ## Delete temp SSH key files
+            ## set local variable, don't know why -- but it works!
+            $removeMe = $BastionSessionDescription.Keyfile
+            Write-Verbose "Removing: ${removeMe}"
+            Remove-Item $removeMe -ErrorAction SilentlyContinue
+
+            $removeMe = $removeMe + ".pub"
+            Write-Verbose "Removing: ${removeMe}"
+            Remove-Item $removeMe -ErrorAction SilentlyContinue
         }
     }
    
     end {
         Write-Verbose "Remove-OpuManagesSshSessionFull: end"
-
-        ## Delete temp SSH key files
-        $ErrorActionPreference = 'SilentlyContinue' 
-        Remove-Item $BastionSessionDescription.Keyfile -ErrorAction SilentlyContinue
-        Remove-Item "${BastionSessionDescription.Keyfile}.pub" -ErrorAction SilentlyContinue
-
+        
         ## Done, restore settings
         $ErrorActionPreference = $globalUserErrorActionPreference
     }    

@@ -7,7 +7,7 @@ Return an object to the caller:
 $bastionSessionDescription = [PSCustomObject]@{
     PSTypeName     = 'OpuManagedBastionSession.Object'
     BastionSession = $bastionSession
-    SShArgs        = <fully formated ssh command>
+    SShCmd         = <fully formated ssh command>
     KeyFile        = <key file generated for the session>
     JumpUser       = <jump user for the session>
     JumpHost       = <jump host for the session>
@@ -17,8 +17,9 @@ $bastionSessionDescription = [PSCustomObject]@{
     SessionExpires = <SessionExpireTimeInLocalTime>
 }
 
-The SshArgs parameter contains a formated SSH "connect" string that can be used directly with 
-anSSH client or as a target definition in SSH based tools like Ansible and PyInfra.   
+The SshCmd attribute contains a formated SSH command string that can be used directly on the command line.
+The KeyFile, JumpUser/JumpHost & TargetUser/TargetHost/TargetPort are intended for use with automation tools 
+such as Ansible and PyInfra.   
         
 .DESCRIPTION
 Creates a managed SSH session with the OCI Bastion Service.
@@ -45,8 +46,8 @@ Name of keyfile that caller wishes to be merged with the output to form the SshA
 
 .EXAMPLE 
 ## Call to create managed session before agent has properly started.
-> $target_host1 = "ocid1....."
-> $bastion_session = $target_host1 | New-OpuManagedSshSessionFull -BastionId $bastion_ocid -TargetKeyFile /tmp/db-10610
+> $target_host_ocid = "ocid1....."
+> $bastion_session = $target_host_ocid | New-OpuManagedSshSessionFull -BastionId $bastion_ocid -TargetKeyFile /tmp/db-10610
 
 Exception: /Users/espenbr/GitHub/oci-posh-utils/public/ps1/new-opumanagedsshsessionfull.ps1:140
 Line |
@@ -77,7 +78,7 @@ function New-OpuManagedSshSessionFull {
         [String]$TargetHostId,
         [Parameter(HelpMessage = 'User to connect at target (opc)')]
         [String]$OsUser = "opc",
-        [Parameter(HelpMessage = 'Use this keyfile to connect to target ($null)')]
+        [Parameter(HelpMessage = 'Merge in the name of this keyfile to SshArgs in return object ($null)')]
         [String]$TargetKeyFile = $null
     )
 
@@ -107,7 +108,7 @@ function New-OpuManagedSshSessionFull {
             $rand = Get-Random -Minimum 9001 -Maximum 9099
             $keyFile = New-OpuSshKeyFromKeygen -KeyBaseName ( -join ("bastionkey-", "${now}-${rand}"))
 
-            Write-Host "Creating Manged SSH Session to ${TargetHostId}:${TargetPort}"
+            Write-Host "Creating Manged SSH Session to ${TargetPort} at target"
 
             try {
                 $bastionService = Get-OCIBastion -BastionId $BastionId  -WaitForLifecycleState Active -WaitIntervalSeconds 0 -ErrorAction Stop
@@ -152,8 +153,6 @@ function New-OpuManagedSshSessionFull {
 
             ## Create ssh command argument
             $sshArgs = $bastionSession.SshMetadata["command"]
-
-            Write-Verbose "SSH args pre: ${sshArgs}"
 
             ## First clean up any comments from Oracle(!)
             $hashPos = $sshArgs.IndexOf('#')
@@ -201,7 +200,7 @@ function New-OpuManagedSshSessionFull {
             $localBastionSession = [PSCustomObject]@{
                 PSTypeName     = 'OpuManagedBastionSession.Object'
                 BastionSession = $bastionSession
-                SShArgs        = $sshArgs
+                SShCmd         = $sshArgs
                 KeyFile        = $keyFile
                 JumpUser       = $jumpUser
                 JumpHost       = $jumpHost
