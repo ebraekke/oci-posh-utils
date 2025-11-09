@@ -11,7 +11,8 @@ $bastionSessionDescription = [PSCustomObject]@{
     BastionSession = $bastionSession
     SShProcess = $sshProcess
     LocalPort = $useThisPort
-    Target = "${TargetHost}:${TargetPort}"
+    TargetHost = $TargetHost
+    TargetPort = $TargetPort
     SessionExpires = <SessionExpireTimeInLocalTime>
 }
         
@@ -274,7 +275,8 @@ function New-OpuPortForwardingSessionFull {
                 BastionSession = $bastionSession
                 SShProcess     = $sshProcess
                 LocalPort      = $useThisPort
-                Target         = "${TargetHost}:${TargetPort}"
+                TargetHost     = $TargetHost
+                TargetPort     = $TargetPort
                 SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds)
             }
 

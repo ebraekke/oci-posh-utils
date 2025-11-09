@@ -9,12 +9,13 @@ Output related to the bastion session deletion will be displayed.
 
 .PARAMETER BastionSessionDescription
 
-$BastionSessionDescription = [PSCustomObject]@{
+$bastionSessionDescription = [PSCustomObject]@{
     PSTypeName = 'OpuPortBastionSession.Object'
     BastionSession = $bastionSession
     SShProcess = $sshProcess
-    LocalPort = $localPort
-    Target = "${TargetHost}:${TargetPort}"
+    LocalPort = $useThisPort
+    TargetHost = $TargetHost
+    TargetPort = $TargetPort
     SessionExpires = <SessionExpireTimeInLocalTime>
 }
  
