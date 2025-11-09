@@ -4,7 +4,7 @@
 TODO : add more here abt Managed ssh sessions.
 
 
-## Droplet `New-OpuManagedSshSessionFull`
+## Cmdlet `New-OpuManagedSshSessionFull`
 ```PowerShell
 <#
 .SYNOPSIS

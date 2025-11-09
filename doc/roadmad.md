@@ -1,5 +1,9 @@
 # Roadmap 
 
+9.nov.2025: s
+TODO: Update to reflect change back to port forwarding .
+
+
 Last updated 04-NOV-2025. 
 
 As of version 0.7 the functionality is at a satisfactory level. 

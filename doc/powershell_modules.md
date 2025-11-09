@@ -34,7 +34,7 @@ Uninstall-Module -Name OCI.PSModules.Common
 
 Validate it works: 
 ```
-> oci-posh-utils  Get-OCIIdentityRegionsList
+> Get-OCIIdentityRegionsList
 
 Key Name
 --- ----

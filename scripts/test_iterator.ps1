@@ -32,3 +32,6 @@ ForEach ($target in $bastion_session_list) {
         }
     }
 }
+
+# Save in file:
+New-Item -Path <path of file> -Value (output-from-cmd) -ErrorAction Stop | Out-Null
