@@ -31,7 +31,7 @@ function New-OpuSshConfigFileFromBastionSession {
         [Parameter(HelpMessage = 'Is this a production config ($false)')]
         [bool]$IsProd = $false,
         [Parameter(HelpMessage = 'User to connect at target (ubuntu)')]
-        [String]$TargetUser = "ubuntu"
+        [String]$TargetUser = "opc"
     )
 
     begin {
