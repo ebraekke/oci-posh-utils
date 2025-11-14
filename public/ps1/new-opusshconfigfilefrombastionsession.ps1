@@ -61,8 +61,8 @@ function New-OpuSshConfigFileFromBastionSession {
         Out-Host -InputObject "  User ${_targetUser}"
         Out-Host -InputObject "  Port ${_targetPort}"
         Out-Host -InputObject "  IdentityFile ${TargetKeyFile}"
-        Out-Host -InputObject "  ServerAliveInterval 120"
-        Out-Host -InputObject "  ServerAliveCountMax 90"
+        Out-Host -InputObject "  ServerAliveInterval 30"
+        Out-Host -InputObject "  ServerAliveCountMax 4"
 
         if ($false -eq $IsProd) {
             Out-Host -InputObject "  StrictHostKeyChecking no"

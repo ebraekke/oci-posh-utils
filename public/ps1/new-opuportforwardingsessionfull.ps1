@@ -240,11 +240,11 @@ function New-OpuPortForwardingSessionFull {
                 $sshArgs = $sshArgs.Remove($hashPos, $strlen - $hashPos)
             }
 
-            ## Supply relevant parameters
+            ## Supply relevant parameters. no host checking on localhost, high frequency of keep-alives
             $sshArgs = $sshArgs.replace("ssh", "-4")    ## avoid "bind: Cannot assign requested address" 
             $sshArgs = $sshArgs.replace("<privateKey>", $keyFile)
             $sshArgs = $sshArgs.replace("<localPort>", $useThisPort)
-            $sshArgs += " -o StrictHostKeyChecking=no -o ServerAliveInterval=120 -o ServerAliveCountMax=90 "
+            $sshArgs += " -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=4 "
 
             Write-Verbose "CONN: ssh ${sshArgs}"
 

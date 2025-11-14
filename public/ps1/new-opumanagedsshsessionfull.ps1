@@ -137,8 +137,10 @@ function New-OpuManagedSshSessionFull {
             $sessionDetails.TargetResourceDetails = $targetResourceDetails
             $sessionDetails.KeyDetails = $keyDetails
     
+            ## This process needs more time than the regular 100*1000 ms that is default for OCI Posh modules
+            ## There is a lot of stuff happening on the back-end
             try {
-                $bastionSession = New-OciBastionSession -CreateSessionDetails $sessionDetails -ErrorAction Stop
+                $bastionSession = New-OciBastionSession -CreateSessionDetails $sessionDetails -ErrorAction Stop -TimeOutInMillis (5*60*1000)
             }
             catch {
                 throw "New-OciBastionSession: $_"
