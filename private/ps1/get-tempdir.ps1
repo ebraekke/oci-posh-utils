@@ -7,7 +7,7 @@ function Get-TempDir {
         return "/tmp"
     }     
     elseif ($IsMacOS) {
-        return "/tmp"
+        return "${Env:TMPDIR}"
     } 
     else {
         ## This should *NOT* happen!

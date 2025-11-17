@@ -30,7 +30,6 @@ $BastionSessionDescription = [PSCustomObject]@{
     SessionExpires = <SessionExpireTimeInLocalTime>
 }
 
-
  
 #>
 
@@ -40,12 +39,12 @@ function New-OpuSshConfigFileFromBastionManagedSession {
         [PSTypeName('OpuManagedBastionSession.Object')]$BastionSessionDescription, 
         [Parameter(Mandatory, HelpMessage = 'Base name to use when defining Host in config')]
         [String]$HostBaseName,
+        [Parameter(HelpMessage = 'Append serial number (1..n) to $HostBaseName')]
+        [bool]$AppendSerial = $true,
         [Parameter(Mandatory, HelpMessage = 'Name of keyfile to add to target for the $OsUser')]
         [String]$TargetKeyFile,
         [Parameter(HelpMessage = 'Is this a production config ($false)')]
-        [bool]$IsProd = $false,
-        [Parameter(HelpMessage = 'User to connect at target (ubuntu)')]
-        [String]$TargetUser = "opc"
+        [bool]$IsProd = $false
     )
 
     begin {
@@ -58,6 +57,8 @@ function New-OpuSshConfigFileFromBastionManagedSession {
         $globalCount = 0
 
         Write-Verbose "New-OpuSshConfigFileFromBastionManagedSession: begin"
+
+        $tempFile = New-TemporaryFile
     }
 
     process {
@@ -65,28 +66,41 @@ function New-OpuSshConfigFileFromBastionManagedSession {
         $globalCount++
 
         $_targetHost = $BastionSessionDescription.Targethost
-        $_targetPort = $BastionSessionDescription.LocalPort
-        $_targetUser = $TargetUser
+        $_targetPort = $BastionSessionDescription.TargetPort
+        $_targetUser = $BastioNSessionDescription.TargetUser
+        $_keyFile    = $BastioNSessionDescription.KeyFile
 
-        Out-Host -InputObject "#"
-        Out-Host -InputObject "# ${HostBaseName} number ${globalCount} - target ${_targetHost}"
-        Out-Host -InputObject "Host ${HostBaseName}${globalCount}"
-        Out-Host -InputObject "  Hostname localhost"
-        Out-Host -InputObject "  User ${_targetUser}"
-        Out-Host -InputObject "  Port ${_targetPort}"
-        Out-Host -InputObject "  IdentityFile ${TargetKeyFile}"
-        Out-Host -InputObject "  ServerAliveInterval 30"
-        Out-Host -InputObject "  ServerAliveCountMax 4"
+        $_jumpUser   = $BastioNSessionDescription.JumpUser
+        $_jumpHost   = $BastioNSessionDescription.JumpHost
+
+
+        Out-File -Append -FilePath $tempFile -InputObject "#" 
+        Out-File -Append -FilePath $tempFile -InputObject "# ${HostBaseName} number ${globalCount} - target ${_targetHost}"
+
+        if ($false -eq $AppendSerial) {
+            Out-File -Append -FilePath $tempFile -InputObject "Host ${HostBaseName}"
+        } else {
+            Out-File -Append -FilePath $tempFile -InputObject "Host ${HostBaseName}${globalCount}"
+        }
+
+        Out-File -Append -FilePath $tempFile -InputObject "  Hostname ${_targetHost}"
+        Out-File -Append -FilePath $tempFile -InputObject "  User ${_targetUser}"
+        Out-File -Append -FilePath $tempFile -InputObject "  Port ${_targetPort}"
+        Out-File -Append -FilePath $tempFile -InputObject "  IdentityFile ${TargetKeyFile}"
+        Out-File -Append -FilePath $tempFile -InputObject "  ServerAliveInterval 30"
+        Out-File -Append -FilePath $tempFile -InputObject "  ServerAliveCountMax 4"
 
         if ($false -eq $IsProd) {
-            Out-Host -InputObject "  StrictHostKeyChecking no"
+            Out-File -Append -FilePath $tempFile -InputObject "  StrictHostKeyChecking no"
             if ($false -eq $IsWindows) {
-                Out-Host -InputObject "  UserKnownHostsFile=/dev/null"
+                Out-File -Append -FilePath $tempFile -InputObject "  UserKnownHostsFile=/dev/null"
             }
             else {
-                Out-Host -InputObject "  UserKnowHostFile=\\.\NUL"
+                Out-File -Append -FilePath $tempFile -InputObject "  UserKnowHostFile=\\.\NUL"
             }
         }
+
+        Out-File -Append -FilePath $tempFile -InputObject "  ProxyCommand ssh -i ${_keyFile} -W %h:%p -p 22 ${_jumpUser}@${_jumpHost}"
     }
    
     end {
@@ -94,6 +108,8 @@ function New-OpuSshConfigFileFromBastionManagedSession {
 
         ## Done, restore settings
         $ErrorActionPreference = $globalUserErrorActionPreference
+
+        $tempFile.FullName
     }    
     
 }

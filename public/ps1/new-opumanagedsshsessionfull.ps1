@@ -167,7 +167,7 @@ function New-OpuManagedSshSessionFull {
             ## Replace second occurence of -i
             $sshArgs = $sshArgs.replace("ProxyCommand=`"ssh -i <privateKey>", "ProxyCommand=`"ssh -i ${keyFile}") 
 
-            ## Insert the reference to the caller's keyfile
+            ## Insert the reference to the caller's keyfile -- if requested
             if ($null -ne $TargetKeyFile) {
                 $sshArgs = $sshArgs.Replace("<privateKey>", $TargetKeyFile)
             }

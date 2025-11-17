@@ -1,5 +1,10 @@
 # Roadmap 
 
+17.nov.2025:
+TODO: Cleanup use of tmpdir 
+TMPDIR in env points to  /var/folders/9w/tt305cd54dz5ktqzh82t4tvw0000gp/T/ on my MAc
+
+
 9.nov.2025: s
 TODO: Update to reflect change back to port forwarding .
 

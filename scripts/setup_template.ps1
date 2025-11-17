@@ -2,16 +2,20 @@
 <#
 Set
 
-$db_ips
+$db_ocids
 $bastion_ocid 
 
-$key_file = "/Users/espenbr/GitHub/oci-posh-utils/config/db.key"
 
 Decide where pipe output 
 #>
 
-$cfgFile = "/Users/espenbr/GitHub/oci-posh-utils/config/temp_ssh_config"
+$key_file = "/Users/espenbr/GitHub/oci-posh-utils/config/db.key"
 
-$bastion_session_list = $db_ips | New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -LocalPort 9001
+$cfg_file = "/Users/espenbr/GitHub/oci-posh-utils/config/temp_ssh_config"
+echo "" > $cfg_file
 
-$bastion_session_list | New-OpuSshConfigFileFromBastionSession -HostBaseName db -TargetKeyFile $key_file > $cfgFile
+$bastion_sessions_managed = $db_ocids | OpuManagedSshSessionFull -BastionId $bastion_ocid
+
+$bastion_sessions_managed | New-OpuSshConfigFileFromBastionManagedSession -IsProd $false -HostBaseName db -TargetKeyFile $key_file 
+
+$bastion_sessions_managed | New-OpuSshConfigFileFromBastionManagedSession -IsProd $false -HostBaseName db -TargetKeyFile $key_file >> $cfg_file
