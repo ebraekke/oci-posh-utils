@@ -1,5 +1,4 @@
 function Get-TempDir {
-    ## Windows and Linux only for now() 
     if ($IsWindows) {
         return $env:TEMP
     } 
@@ -7,7 +6,7 @@ function Get-TempDir {
         return "/tmp"
     }     
     elseif ($IsMacOS) {
-        return "${Env:TMPDIR}"
+        return $env:TMPDIR
     } 
     else {
         ## This should *NOT* happen!
