@@ -20,7 +20,7 @@ $bastionSessionDescription = [PSCustomObject]@{
  
 #>
 
-function New-OpuSshConfigFileFromBastionSession {
+function New-OpuSshConfigFileFromBastionPortForwardingSession {
     param (
         [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'Full Bastion Port Forwarding Session Description Object')]
         [PSTypeName('OpuPortBastionSession.Object')]$BastionSessionDescription, 
