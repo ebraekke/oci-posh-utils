@@ -1,10 +1,15 @@
 
 <#
 .SYNOPSIS
-x
+Create a ssh config file from bastion session description object(s) to enable 
+remote configuration management through ssh based tools such as Ansibel and PyInfra.
+
+Configuartion is saved in a temporary file,the name of the temporary file is returned to the caller. 
 
 .DESCRIPTION
-Output:
+
+
+Temporary file content will look like so:
 
 Host <HOST-BASE-NAME>1
   HostName <TARGET-IP-INSIDE-VCN>
@@ -14,6 +19,8 @@ Host <HOST-BASE-NAME>1
   IdentityFile <FULL-NAME-OF-INPUT-KEY-HERE>
   UserKnownHostsFile /dev/null
   ProxyCommand ssh -i /tmp/bastionkey-2025_11_07_11_25_41-9087 -W %h:%p -p 22 ocid1.bastionsession.oc1.eu-frankfurt-1.<OCI-UUID>@host.bastion.<OCI-REGION>.oci.oraclecloud.com
+
+The validity of the output can be verified by execyting "ssh -F <tempfile> <target>".
 
 .PARAMETER BastionSessionDescription
 
@@ -29,8 +36,27 @@ $BastionSessionDescription = [PSCustomObject]@{
     TargetPort     = <target port for the session<
     SessionExpires = <SessionExpireTimeInLocalTime>
 }
-
  
+.PARAMETER HostBaseName
+Base name to use when defining host(s) in config. 
+If value is "db" and $AppendSerial is $true, the hosts will be called db1 .. dbN.
+If value is "db" and $AppendSerial is $false, the hosts will be called db. 
+Should only be used if only one host, this is teh caller's responsibility.
+
+.PARAMETER AppendSerial
+Defines if a serial number (starting with 1) should be appended to $HostBaseName.
+Default $true.
+
+.PARAMETER TargetKeyFile
+Ssh key file to be used for accessing target host. 
+
+.PARAMETER IsProd
+Determines if "unsafe" defaults are added to config for each target host.
+Default $false.
+
+When $false:
+    StrictHostKeyChecking no 
+    UserKnownHostsFile=/dev/null 
 #>
 
 function New-OpuSshConfigFileFromBastionManagedSession {
@@ -41,7 +67,7 @@ function New-OpuSshConfigFileFromBastionManagedSession {
         [String]$HostBaseName,
         [Parameter(HelpMessage = 'Append serial number (1..n) to $HostBaseName')]
         [bool]$AppendSerial = $true,
-        [Parameter(Mandatory, HelpMessage = 'Name of keyfile to add to target for the $OsUser')]
+        [Parameter(Mandatory, HelpMessage = 'Name of keyfile to add to target for the TargetUser')]
         [String]$TargetKeyFile,
         [Parameter(HelpMessage = 'Is this a production config ($false)')]
         [bool]$IsProd = $false
