@@ -1,5 +1,23 @@
 # Roadmap 
 
+25.11.2025
+
+Fic validation of input: 
+ocid:
+$ocid_str = "ocid1.vcn.oc1.eu-frankfurt-1.longcrypticuuidstyletexthereandlongcrypticuuidstyletextherex"
+
+```powershell
+## Let's extract the data (user @ host) needed for the return object
+#   $pattern = '(?<user>[\w.-]+)@(?<host>[\w.-]+)'
+$pattern = '(?<obj>[\w.-]+)\.(?<scope>[\w.-]+)\.(?<realm>[\w.-]+)\.(?<region>[\w.-]+)\.(?<uuid>[\w.-]+)'
+
+$pattern = '(?<objid>[\w.-]+)\.(?<scope>[\w.-]+)\.(?<realm>[\w.-]+)'
+
+# Get all matches
+$ocid_str = "ocid1.vcn.oc1.eu-frankfurt-1.longcrypticuuidstyletexthereandlongcrypticuuidstyletextherex"
+$allMatches = [regex]::Matches($sshArgs, $pattern)
+```
+
 17.nov.2025:
 TODO: Cleanup use of tmpdir 
 TMPDIR in env points to  /var/folders/9w/tt305cd54dz5ktqzh82t4tvw0000gp/T/ on my MAc

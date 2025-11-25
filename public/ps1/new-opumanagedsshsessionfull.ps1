@@ -117,6 +117,8 @@ function New-OpuManagedSshSessionFull {
             catch {
                 throw "Get-OCIBastion: $_"
             }    
+
+
             $maxSessionTtlInSeconds = $bastionService.MaxSessionTtlInSeconds
 
             ## Details of target
@@ -134,9 +136,12 @@ function New-OpuManagedSshSessionFull {
             $sessionDetails.SessionTtlInSeconds = $maxSessionTtlInSeconds
             $sessionDetails.BastionId = $BastionId
             $sessionDetails.KeyType = "PUB"
-            $sessionDetails.TargetResourceDetails = $targetResourceDetails
+            $sessionDetails.TargetResourceDetails = $TargetResourceDetails
             $sessionDetails.KeyDetails = $keyDetails
     
+            Write-Verbose "PayLoad"
+            Write-Verbose (ConvertTo-Json $sessionDetails)
+
             ## This process needs more time than the regular 100*1000 ms that is default for OCI Posh modules
             ## There is a lot of stuff happening on the back-end
             try {

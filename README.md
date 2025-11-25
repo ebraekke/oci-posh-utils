@@ -8,10 +8,29 @@ Code structure inspired by
 https://www.psplaybook.com/2025/02/06/powershell-modules-best-practices/
 
 
-Import the psd1 to get 
+```shell
+tofu output -json db_ocids | ConvertFrom-Json
+>>
+ocid1.instance.oc1.eu-frankfurt-1.<ABC>
+ocid1.instance.oc1.eu-frankfurt-1.<XYZ>
+ocid1.instance.oc1.eu-frankfurt-1.<HEX>
 ```
+
+```shell
+tofu output -json db_ips | ConvertFrom-Json
+>>
+10.0.1.77
+10.0.1.80
+10.0.1.210
+```
+
+Import the psd1 to get 
+```shell
 Import-Module ./oci-posh-utils.psd1 
-```ƒ
+```
+
+# Archive
+
 
 While in test and continous (re)create/drop mdoe I wun with teh following `~./ssh/config` settings: 
 ```shell
