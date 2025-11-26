@@ -88,7 +88,7 @@ function New-OpuSshConfigFileFromBastionManagedSession {
     }
 
     process {
-
+        
         $globalCount++
 
         $_targetHost = $BastionSessionDescription.Targethost

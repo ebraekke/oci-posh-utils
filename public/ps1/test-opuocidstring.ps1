@@ -14,17 +14,12 @@ instance
 #>
 function Test-OpuOcidString {
     param(
-        ## OCID object string to test
-        [Parameter(HelpMessage = 'OCID string to validate')]
+        [Parameter(Mandatory, HelpMessage='OCID string to validate')]
         [String]$OcidString,
         [Parameter(HelpMessage = 'Test if of type (N/A)')]
         [String]$IsOfType = 'N/A'
     )
-
     
-    if ($null -eq $OcidString) {
-        Throw "Test-OcidString: -OcidString must be provided"
-    }
     try {
         ## Perform regex 
         $pattern = '(?<obj>[\w.-]+)\.(?<scope>[\w.-]+)\.(?<realm>[\w.-]+)\.(?<region>[\w.-]*)\.(?<uuid>[\w.-]+)'
@@ -37,7 +32,7 @@ function Test-OpuOcidString {
 
         ## Need exact match
         if ($allMatches.Count -ne 1) {
-            return $false
+            throw "Input string ${OcidString}: not a proper OCID string"
         }
 
         ## Now check if specific verification against object type was requested
@@ -45,13 +40,13 @@ function Test-OpuOcidString {
             Write-Verbose "scope:"
             Write-Verbose $allMatches[0].Groups['scope'].Value
             if ($allMatches[0].Groups['scope'].Value -eq $IsOfType) {
-                return $true
+                return
             } else {
-                return $false
+                throw "Input string ${OcidString}: not of type ${IsOfType}"
             }
 
         } else {
-            return $true
+            return
         }
     }
     catch {

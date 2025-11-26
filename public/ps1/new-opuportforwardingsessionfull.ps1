@@ -158,6 +158,10 @@ function New-OpuPortForwardingSessionFull {
 
     process {
         try {
+            ## Check input parameters
+            Test-OpuOcidString -OcidString $BastionId -IsOfType "bastion"
+            Test-OpuIpAddr -IpAddr $TargetHost
+
             ## Validate input
             if ((5 -gt $WaitForConnectSeconds) -or (60 -lt $WaitForConnectSeconds)) {
                 throw "WaitForConnectSeconds is ${WaitForConnectSeconds}: must to be between 5 and 60!"

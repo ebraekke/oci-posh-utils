@@ -100,6 +100,10 @@ function New-OpuManagedSshSessionFull {
             ## check that mandatory sw is installed    
             Test-OpuSshAvailable
 
+            ## Check input parameters
+            Test-OpuOcidString -OcidString $TargetHostId -IsOfType "instance"
+            Test-OpuOcidString -OcidString $BastionId -IsOfType "bastion"
+
             ## Import modules
             Import-Module OCI.PSModules.Bastion
 
