@@ -1,3 +1,5 @@
 config/*
 
 .vscode/*
+
+.DS_store

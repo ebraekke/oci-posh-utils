@@ -66,6 +66,11 @@ try {
     Import-Module "${PSScriptRoot}/../oci-posh-utils.psd1"
     ## END: generic section
 
+    ## Ensure params are ok
+    Test-OpuOcidString -OcidString $BastionId -IsOfType "bastion"
+    Test-OpuIpAddr -IpAddr $TargetHost
+    Test-OpuOcidString -OcidString $SecretId -IsOfType "vaultsecret"
+
     ## Create session and process, get information in custom object -- see below
     $bastionSessionDescription = New-OpuPortForwardingSessionFull -BastionId $BastionId -TargetHost $TargetHost -TargetPort $TargetPort
     $localPort = $bastionSessionDescription.LocalPort
