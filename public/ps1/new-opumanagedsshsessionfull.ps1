@@ -47,7 +47,6 @@ Name of keyfile that caller wishes to be merged into the output to form the SshC
 
 .EXAMPLE 
 ## Call to create managed session before agent has properly started.
-> $target_host_ocid = "ocid1....."
 > $bastion_session = $target_host_ocid | New-OpuManagedSshSessionFull -BastionId $bastion_ocid -TargetKeyFile /tmp/db-10610
 
 Exception: /Users/espenbr/GitHub/oci-posh-utils/public/ps1/new-opumanagedsshsessionfull.ps1:140
@@ -68,6 +67,9 @@ Line |
      | information about resolving this error, see
      | https://docs.oracle.com/en-us/iaas/Content/API/References/apierrors.htm#apierrors_400__400_invalidparameter If you are
      | unable to resolve this Bastion issue, please contact Oracle support and provide them this full error message.
+
+.EXAMPLE 
+## Creating a number of managed sessions based on a list of instance ocids
 
 #>
 function New-OpuManagedSshSessionFull {

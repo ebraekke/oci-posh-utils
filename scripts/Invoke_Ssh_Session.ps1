@@ -1,12 +1,13 @@
 <#
 .SYNOPSIS
-Invoke  an SSH  sesssion with a target host accessible through the OCI Bastion service.
+Invoke  an SSH  sesssion with a target host accessible through the OCI Bastion service using a secret from the OCI vault.
 
 .DESCRIPTION
-Using the Bastion service and tunneling a SSH session will be invoked on the target host. 
-A ephemeral key pair for the Bastion session is created (and later destroyed). 
-Since the script relies on port forwarding, the bastion agent is not a requirment on the target.  
-This combo will allow you to "ssh" through the Bastion service via a local port and to your destination: $TargetHost:$TargetPort   
+Using the Bastion service and tunneling a SSH session will be invoked on the target host using a secret from the OCI vault as the SSH key. 
+
+The session management wrt the Bastion is handled by cmdlet New-OpuPortForwrdingSessionFull. 
+This allows you to "connect" through the Bastion service via a local port and to your destination: $TargetHost:$TargetPort   
+
 A path from the Bastion to the target is required.
 The Bastion session inherits TTL from the Bastion (instance). 
 
@@ -28,8 +29,8 @@ Os user to connect with at target.
 Defaults to opc. 
 
 .EXAMPLE 
-## Creating a SSH session to the default port with the default user
-❯ .\Invoke_Ssh_Session.ps1 -BastionId $bastion_ocid -TargetHost 10.0.1.102 -SecretId $ssh_key_ocid
+## Create a SSH session to the default port with the default user
+❯.\Invoke_Ssh_Session.ps1 -BastionId $bastion_ocid -TargetHost 10.0.1.102 -SecretId $ssh_key_ocid
 Getting the SSH key from the secrets vault
 Creating ephemeral key pair
 Creating Port Forwarding Session to 10.0.1.102:22
@@ -41,6 +42,28 @@ Validating downloaded key...
 ...
 
 Last login: Sun Mar  5 16:29:54 2023 from 10.0.0.49
+
+.EXAMPLE 
+## Failed creation of SSH session wit han incorrect username 
+./scripts/Invoke_Ssh_Session.ps1 -BastionId $bastion_ocid -TargetHost 10.0.1.65 -SecretId $sshkey_ocid -OsUser xyz
+Creating ephemeral key pair
+Creating Port Forwarding Session to 10.0.1.65:22
+Waiting for creation of bastion session to complete
+Creating SSH tunnel
+Waiting for creation of SSH tunnel to complete
+xyz@localhost: Permission denied (publickey,gssapi-keyex,gssapi-with-mic).
+
+.EXAMPLE 
+## Failed creation of SSH session because of invalid SSH key
+./scripts/Invoke_Ssh_Session.ps1 -BastionId $bastion_ocid -TargetHost 10.0.1.65 -SecretId $bad_secret
+Creating ephemeral key pair
+Creating Port Forwarding Session to 10.0.1.65:22
+Waiting for creation of bastion session to complete
+Creating SSH tunnel
+Waiting for creation of SSH tunnel to complete
+Load key "/var/folders/9w/tt305cd54dz5ktqzh82t4tvw0000gp/T//BastionSession-2025_11_28_15_42_04-9036-27483": invalid format
+Write-Error: Invoke_Ssh_Session.ps1: New-OpuSshKeyFromSecret: New-OpuSshKeyFromSecret: SecretId points to a invalid private SSH key
+>
 #>
 
 param(
@@ -70,6 +93,9 @@ try {
     Test-OpuOcidString -OcidString $BastionId -IsOfType "bastion"
     Test-OpuIpAddr -IpAddr $TargetHost
     Test-OpuOcidString -OcidString $SecretId -IsOfType "vaultsecret"
+
+    ## Validate that ssh is omdeed available
+    Test-OpuSshAvailable
 
     ## Create session and process, get information in custom object -- see below
     $bastionSessionDescription = New-OpuPortForwardingSessionFull -BastionId $BastionId -TargetHost $TargetHost -TargetPort $TargetPort
