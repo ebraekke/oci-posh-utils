@@ -1,14 +1,81 @@
 
 # oci-posh-utils
 
-This is a PowerShell utility suite intended to help you automate access to resources in OCI that sits inside of a secure virtual network
-or VCN (Virtual Cloud Network) in OCI speak using the Bastion service.
-
-Key functionality:
-- PowerShell cmdlets to manage Bastion sessions.
-- PowerShell scripts that wraps the cmdlets and illustrates how you can integrate into your workflow, be that interactive or as part of automation.
+This is a PowerShell utility suite intended to help you automate access to resources in OCI (Oracle Cloud Infrastructure) 
+that sits inside of a secure virtual network or VCN (Virtual Cloud Network) in OCI speak using the Bastion service.
 
 It is assumed that the user is familiar with SSH.
+
+```
+                        +-----------------------------+
+                        |        Public Internet      |
+                        +-----------------------------+
+                                      |
+                                      | SSH / Managed Session
+                                      v
+                        +-----------------------------+
+                        |       OCI Bastion Service   |
+                        |  - No public IP needed      |
+                        |  - Time-bound access        |
+                        |  - SSH / RDP / Port Fwd     |
+                        +-----------------------------+
+                                      |
+                                      | Private Access Tunnel
+                                      v
+       -------------------------------------------------------------------------------------
+       |                    OCI Virtual Cloud Network (VCN)                                |
+       |                                                                                   |
+       |   Left: SSH/RDP to Private Compute            Right: Port Fwd to DB               |
+       |                                                                                   |
+       |   +-------------------+                         +-------------------+             |
+       |   | Private Subnet    |                         | Private Subnet    |             |
+       |   | (No Public IPs)   |                         | (No Public IPs)   |             |
+       |   +-------------------+                         +-------------------+             |
+       |            |                                            |                         |
+       |            | SSH / RDP via Bastion                      | Port Forwarding Session |
+       |            v                                            v                         |
+       |   +-------------------+                         +----------------------------+    |
+       |   | Compute Instance  |                         | Database System / DB Node  |    |
+       |   | (Target Host)     |                         | (e.g., ATP, DB System)     |    | 
+       |   +-------------------+                         +----------------------------+    |
+       |                                                                                   |
+       ------------------------------------------------------------------------------------|
+
+Notes:
+- Left side: Standard Bastion-managed SSH or RDP session to compute resources.
+- Right side: Bastion port-forwarding session to database targets (e.g., Oracle DB System, Autonomous Database private endpoint).
+- No public IPs required for either compute or database hosts.
+- Sessions are ephemeral, policy-controlled, and logged.
+```
+
+## Use cases 
+
+1. Set up (virtual) wiring to make hosts -- with private addresses no permanent path to the public -- inside a VCN accessible to 
+ssh based configuration management tools such as Ansible and PyInfra.
+2. Configure local ports to point to endpoints inside a VCN -- with private addresses no permanent path to the public -- to 
+be used with database tools such as Liquibase and Flyway. 
+3. Create an interactive session to a serviec endpoint inside of a VCN -- with private addresses no permanent path to the public -- to 
+be used with tools like `ssh` and `mongosh`.
+
+Item (3) above was how this project started. I was so impressed by the ability to launch `sqlcl` or `mysqlsh` inside of the OCI control
+panel that I wanted to replicate it. `./Scripts/Invoke_Ssh_Session.ps1` and `./Scripts/Invoke_Mongosh_Session.ps1` can be used as
+templates for creating your own scripts and for tips on how you can possibly automate access to database endpoints inside of OCI.   
+
+
+## Notes 
+
+### Requirements 
+
+The following software must be installed in your environment:
+
+* [OCI PowerShell Modules](doc/powershell_modules.md) 
+- OpenSSH binaries
+- mongosh (for Invoke_Mongosh_Session.ps1)
+
+### Why PowerShell? 
+
+PowerShell is an extremely powerful and forgiving environment for exploring an API. I especially appreciate the ability to inspect returned objects. This is the ultimate learning environment for me.
+
 
 ## Basic usage 
 

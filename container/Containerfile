@@ -1,0 +1,45 @@
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+RUN apt-get update && apt-get install -y openssh-client
+
+# Switch to app user
+USER app
+
+# Prepare for source copy
+RUN mkdir /home/app/scripts/
+RUN mkdir /home/app/public/
+RUN mkdir /home/app/private/
+
+# Copy sopurce
+COPY scripts/ /home/app/scripts/
+COPY public/  /home/app/public/
+COPY private/ /home/app/private/
+COPY oci-posh-utils.psd1 /home/app
+
+# Install OCI powershell modules
+RUN /usr/bin/pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Common
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Core
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Bastion
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Computeinstanceagent
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Database
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.DatabaseTools
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Identity
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Mysql
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Objectstorage
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Secrets
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Vault
+RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Resourcemanager
+
+# Enable ssh for app user withinh OCI region eu-frankfurt-1
+RUN mkdir /home/app/.ssh
+RUN touch /home/app/.ssh/known_hosts
+RUN chmod 0600 /home/app/.ssh/known_hosts
+RUN ssh-keyscan -H host.bastion.eu-frankfurt-1.oci.oraclecloud.com >> /home/app/.ssh/known_hosts
+
+
+ENTRYPOINT [ "pwsh" ]
+
+# Set the default command to run when the container starts without specific commands
+CMD ["-NoExit", "-Command", "Write-Host 'Welcome to PowerShell!'"]

@@ -1,5 +1,24 @@
 # Roadmap 
 
+29.11.2025 
+
+Containers? 
+https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-in-docker?view=powershell-7.5
+
+
+```
+podman pull mcr.microsoft.com/dotnet/sdk:8.0
+
+podman run -it mcr.microsoft.com/dotnet/sdk:8.0 pwsh
+
+```
+
+Inside:
+```
+Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
+
+
+```
 25.11.2025
 
 Fic validation of input: 
