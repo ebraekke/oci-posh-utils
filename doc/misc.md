@@ -1,3 +1,22 @@
+# Containerfile in progress 
+
+
+wget -P /tmp https://cdn.mysql.com//Downloads/MySQL-Shell/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit.tar.gz
+
+cd /home/app
+
+tar -zxvf /tmp/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit.tar.gz
+
+chown -R app:app mysql-shell-8.4.7-linux-glibc2.28-arm-64bit
+
+
+/home/app/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit/bin> ./mysqlsh --version
+Cannot set LC_ALL to locale en_US.UTF-8: No such file or directory
+/home/app/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit/bin/mysqlsh   Ver 8.4.7 for Linux on aarch64 - for MySQL 8.4.7 (MySQL Community Server (GPL))
+
+??
+apt-get install -y locales
+
 # Podman start
 
 https://learn.microsoft.com/en-us/powershell/scripting/install/powershell-in-docker?view=powershell-7.5
@@ -21,7 +40,24 @@ Inside (as app):
 ```
 Get-OCIIdentityRegionsList
 ...
+```
 
+# This is Debian 
+
+````
+PS /> cat /etc/os-release
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+NAME="Debian GNU/Linux"
+VERSION_ID="12"
+VERSION="12 (bookworm)"
+VERSION_CODENAME=bookworm
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+```
+TODO: 
+https://www.mongodb.com/docs/mongodb-shell/install/?operating-system=linux&linux-distribution=debian&debian-version=debian12
 
 # Archive 
 

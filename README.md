@@ -61,21 +61,62 @@ Item (3) above was how this project started. I was so impressed by the ability t
 panel that I wanted to replicate it. `./Scripts/Invoke_Ssh_Session.ps1` and `./Scripts/Invoke_Mongosh_Session.ps1` can be used as
 templates for creating your own scripts and for tips on how you can possibly automate access to database endpoints inside of OCI.   
 
-
 ## Notes 
 
-### Requirements 
+### Requirements for regular setup
+
+Clone the repo. 
 
 The following software must be installed in your environment:
-
-* [OCI PowerShell Modules](doc/powershell_modules.md) 
+- [OCI PowerShell Modules](doc/powershell_modules.md) 
 - OpenSSH binaries
 - mongosh (for Invoke_Mongosh_Session.ps1)
+- mysqlsh (new features coming soon)
+
+Import the cmdlets like so: ` Import-Module ./oci-posh-utils.psd1`. 
+
+### Create and run container
+
+1. Clone repo
+2. From top level in project directory execute the following. Substitute podman with your container tool:
+`podman build --tag oci-posh-utils -f ./container/Containerfile `. 
+3. Run interactively: `podman run -u 1654 -it -v ~/.oci:/home/app/.oci:ro oci-posh-utilst`.  
+
+Explanations:  
+- `-u 1654` ensures container starts with user `app` and not `root`. 
+- `-v ~/.oci:/home/app/.oci:ro`ensureas that the user's oci config directory becomes visible for the `app`user inside the container. 
 
 ### Why PowerShell? 
 
 PowerShell is an extremely powerful and forgiving environment for exploring an API. I especially appreciate the ability to inspect returned objects. This is the ultimate learning environment for me.
 
+
+### Create your own setup/wraper scripts 
+
+```powershell
+
+<#
+Set
+
+$db_ocids
+$bastion_ocid 
+#>
+
+$key_file = "/Users/espenbr/GitHub/oci-posh-utils/config/db.key"
+$cfg_file = "/Users/espenbr/GitHub/oci-posh-utils/config/temp_ssh_config"
+
+$bastion_sessions_managed = $db_ocids | OpuManagedSshSessionFull -BastionId $bastion_ocid
+
+$temp_file = $bastion_sessions_managed | New-OpuSshConfigFileFromBastionManagedSession -IsProd $false -HostBaseName db-az1- -TargetKeyFile $key_file 
+
+cat $temp_file > $cfg_file
+
+ssh -F $cfgfile .. db-az-1 .. 3 
+```
+
+
+
+# Archive 
 
 ## Basic usage 
 

@@ -1,7 +1,31 @@
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0
 
-RUN apt-get update && apt-get install -y openssh-client
+# Make sure you can install basic packages 
+RUN apt-get -u update 
+
+# Install openssh, gnupg, locales-all & apt-utils
+RUN apt-get install -y openssh-client gnupg locales-all apt-utils
+
+# Download repo links for mongosh
+RUN wget -qO- https://www.mongodb.org/static/pgp/server-8.0.asc | tee /etc/apt/trusted.gpg.d/server-8.0.asc
+RUN echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/8.0 main" | tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+
+# Install mongosh
+RUN apt-get -y update
+RUN apt-get install -y mongodb-mongosh-shared-openssl3
+
+# Prep for msyqlsh
+ENV \
+    LC_ALL=en_US.UTF-8 \
+    LANG=en_US.UTF-8
+
+# Download and unpack mysqlsh, create symlink -- app is only user, can stay owner
+RUN wget -P /tmp https://cdn.mysql.com//Downloads/MySQL-Shell/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit.tar.gz
+WORKDIR /home/app 
+RUN tar -zxvf /tmp/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit.tar.gz
+RUN chown -R app:app mysql-shell-8.4.7-linux-glibc2.28-arm-64bit
+RUN ln -s /home/app/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit/bin/mysqlsh /usr/bin/mysqlsh
 
 # Switch to app user
 USER app
@@ -11,7 +35,7 @@ RUN mkdir /home/app/scripts/
 RUN mkdir /home/app/public/
 RUN mkdir /home/app/private/
 
-# Copy sopurce
+# Copy source
 COPY scripts/ /home/app/scripts/
 COPY public/  /home/app/public/
 COPY private/ /home/app/private/
@@ -32,13 +56,13 @@ RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Secrets
 RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Vault
 RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Resourcemanager
 
-# Enable ssh for app user withinh OCI region eu-frankfurt-1
+# Enable ssh for app user within OCI region eu-frankfurt-1
 RUN mkdir /home/app/.ssh
 RUN touch /home/app/.ssh/known_hosts
 RUN chmod 0600 /home/app/.ssh/known_hosts
 RUN ssh-keyscan -H host.bastion.eu-frankfurt-1.oci.oraclecloud.com >> /home/app/.ssh/known_hosts
 
-
+# Start here
 ENTRYPOINT [ "pwsh" ]
 
 # Set the default command to run when the container starts without specific commands
