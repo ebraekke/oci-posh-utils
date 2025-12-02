@@ -18,6 +18,7 @@ OCID of secret stored in vault that contains the ssh key.
 .PARAMETER KeyBaseName
 Base name to create key file from. 
 This name will be padded with a "-" and a random number between 1 and 99999.
+Defaults to "tmp".
 
 .EXAMPLE 
 ## Successfully create a local file based on a valid ssh key.  
@@ -53,8 +54,8 @@ function New-OpuSshKeyFromSecret {
     param(
         [Parameter(Mandatory, HelpMessage='OCID of secret holding the SSH key')]
         [String]$SecretId,
-        [Parameter(Mandatory, HelpMessage='Use this base name')]
-        [String]$KeyBaseName
+        [Parameter(HelpMessage='Use this base name (tmp)')]
+        [String]$KeyBaseName="tmp"
     )
 
     try {

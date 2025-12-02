@@ -91,6 +91,21 @@ Explanations:
 PowerShell is an extremely powerful and forgiving environment for exploring an API. I especially appreciate the ability to inspect returned objects. This is the ultimate learning environment for me.
 
 
+### Usage
+
+Set:
+- `$bastion_ocid = "x"`
+- `$db_ocids= tofu output -json db_ocids | ConvertFrom-Json`: points to 3 db nodes inside names db-az1-1 .. 3.
+
+```
+$bastion_sessions_managed = $db_ocids | New-OpuManagedSshSessionFull -BastionId $bastion_ocid                             
+
+$env:SSH_CONFIG_FILE=$bastion_sessions_managed | New-OpuSshConfigFileFromBastionManagedSession -HostBaseName db-az1- -TargetKeyFile $key_file
+
+ssh -F $env:SSH_CONFIG_FILE db-az1-1
+```
+
+
 ### Create your own setup/wraper scripts 
 
 ```powershell
