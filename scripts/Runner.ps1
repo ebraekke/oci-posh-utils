@@ -1,7 +1,8 @@
 # /Users/espenbr/Tools/bin/setenv.ps1 
 
 <#
-USE: $env:SSH_CONFIG_FILE=./scripts/Runner.ps1 -BastionId $bastion_ocid -TargetOcidsJson $db_ocids_json -SecretId $sshkey_ocid
+USE: 
+$env:SSH_CONFIG_FILE=./scripts/Runner.ps1 -BastionId $bastion_ocid -TargetOcidsJson $db_ocids_json -SecretId $sshkey_ocid
 
  Params are
  - bastion ocid
