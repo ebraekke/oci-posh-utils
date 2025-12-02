@@ -135,7 +135,9 @@ catch {
 }
 finally {
     ## START: generic section
-    ## To Maximize possible clean ups, continue on error 
+    Remove-Module oci-posh-utils
+
+     ## To Maximize possible clean ups, continue on error 
     $ErrorActionPreference = "Continue"
     
     ## Request cleanup if session object has been created
