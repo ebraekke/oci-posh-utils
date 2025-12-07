@@ -456,3 +456,4 @@ Function        Test-OpuSshAvailable                               0.8        oc
 
 Q: Why ips and not (dns)names? 
 A: The Bastion servicse only allows for ip addresses.
+
