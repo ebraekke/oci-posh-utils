@@ -1,5 +1,26 @@
-# Containerfile in progress 
+# Containerfile more: 15.12
 
+```
+# Use a base image that has bash, wget, and tar installed (e.g., ubuntu or fedora)
+# Alpine Linux uses 'apk add' instead of 'apt-get install' and might need 'bash' installed separately.
+FROM ubuntu:22.04
+
+# Install wget (if not already present in the base image)
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
+# Use a single RUN command to download and extract a tar.gz file
+RUN mkdir -p /app && \
+    wget -q -O- "https://example.com/path/to/archive.tar.gz" | tar -xzf - -C /app
+
+# The -q flag makes wget quiet
+# The -O- flag tells wget to write to standard output (stdout)
+# The | pipe redirects stdout of wget to stdin of tar
+# The -xzf - flags tell tar to (x)extract, (z)handle gzip, and read from (f)standard input (-)
+# The -C /app flag tells tar to change the directory to /app before extracting
+
+```
+
+# Containerfile in progress 
 
 wget -P /tmp https://cdn.mysql.com//Downloads/MySQL-Shell/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit.tar.gz
 

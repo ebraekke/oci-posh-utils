@@ -135,7 +135,6 @@ catch {
 }
 finally {
     ## START: generic section
-    Remove-Module oci-posh-utils
 
      ## To Maximize possible clean ups, continue on error 
     $ErrorActionPreference = "Continue"
@@ -145,6 +144,9 @@ finally {
         Remove-OpuPortForwardingSessionFull -BastionSessionDescription $bastionSessionDescription
     }
 
+    ## Now remove module from memory
+    Remove-Module oci-posh-utils
+ 
     ## Done, restore settings
     $ErrorActionPreference = $userErrorActionPreference
     ## END: generic section

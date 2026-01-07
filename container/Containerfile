@@ -1,39 +1,45 @@
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0
 
-# Make sure you can install basic packages 
-RUN apt-get -u update 
-
-# Install openssh, gnupg, locales-all & apt-utils
-RUN apt-get install -y openssh-client gnupg locales-all apt-utils
+# Install just gnupg for mongosh repo
+RUN : \
+&& apt-get update \
+&& apt-get install -y --no-install-recommends gnupg \
+&& rm -rf /var/lib/apt/lists/*
 
 # Download repo links for mongosh
-RUN wget -qO- https://www.mongodb.org/static/pgp/server-8.0.asc | tee /etc/apt/trusted.gpg.d/server-8.0.asc
-RUN echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/8.0 main" | tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+RUN : \
+&& wget -qO- https://www.mongodb.org/static/pgp/server-8.0.asc | tee /etc/apt/trusted.gpg.d/server-8.0.asc \
+&& echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/debian bookworm/mongodb-org/8.0 main" | tee /etc/apt/sources.list.d/mongodb-org-8.0.list
 
-# Install mongosh
-RUN apt-get -y update
-RUN apt-get install -y mongodb-mongosh-shared-openssl3
+# Install all needed utils
+RUN : \
+&& apt-get update \
+&& apt-get install -y --no-install-recommends openssh-client gnupg locales-all apt-utils mongodb-mongosh-shared-openssl3 \
+&& rm -rf /var/lib/apt/lists/*
 
-# Prep for msyqlsh
+# Prep for mysqlsh
 ENV \
     LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8
 
+
 # Download and unpack mysqlsh, create symlink -- app is only user, can stay owner
-RUN wget -P /tmp https://cdn.mysql.com//Downloads/MySQL-Shell/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit.tar.gz
+# Adds 747MB, this is to be expected, the directory in itself is 735M
 WORKDIR /home/app 
-RUN tar -zxvf /tmp/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit.tar.gz
-RUN chown -R app:app mysql-shell-8.4.7-linux-glibc2.28-arm-64bit
-RUN ln -s /home/app/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit/bin/mysqlsh /usr/bin/mysqlsh
+RUN : \
+&& wget -q -O- "https://cdn.mysql.com//Downloads/MySQL-Shell/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit.tar.gz" | tar -xzf - -C /home/app \
+&& chown -R app:app mysql-shell-8.4.7-linux-glibc2.28-arm-64bit \
+&& ln -s /home/app/mysql-shell-8.4.7-linux-glibc2.28-arm-64bit/bin/mysqlsh /usr/bin/mysqlsh 
 
 # Switch to app user
 USER app
 
 # Prepare for source copy
-RUN mkdir /home/app/scripts/
-RUN mkdir /home/app/public/
-RUN mkdir /home/app/private/
+RUN : \
+&& mkdir /home/app/scripts/ \
+&& mkdir /home/app/public/ \
+&& mkdir /home/app/private/
 
 # Copy source
 COPY scripts/ /home/app/scripts/
@@ -42,25 +48,27 @@ COPY private/ /home/app/private/
 COPY oci-posh-utils.psd1 /home/app
 
 # Install OCI powershell modules
-RUN /usr/bin/pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Common
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Core
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Bastion
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Computeinstanceagent
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Database
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.DatabaseTools
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Identity
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Mysql
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Objectstorage
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Secrets
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Vault
-RUN /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Resourcemanager
+RUN : \
+&& /usr/bin/pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Common \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Core \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Bastion \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Computeinstanceagent \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Database \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.DatabaseTools \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Identity \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Mysql \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Objectstorage \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Secrets \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Vault \
+&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Resourcemanager
 
 # Enable ssh for app user within OCI region eu-frankfurt-1
-RUN mkdir /home/app/.ssh
-RUN touch /home/app/.ssh/known_hosts
-RUN chmod 0600 /home/app/.ssh/known_hosts
-RUN ssh-keyscan -H host.bastion.eu-frankfurt-1.oci.oraclecloud.com >> /home/app/.ssh/known_hosts
+RUN : \
+&& mkdir /home/app/.ssh \
+&& touch /home/app/.ssh/known_hosts \
+&& chmod 0600 /home/app/.ssh/known_hosts \
+&& ssh-keyscan -H host.bastion.eu-frankfurt-1.oci.oraclecloud.com >> /home/app/.ssh/known_hosts
 
 # Start here
 ENTRYPOINT [ "pwsh" ]

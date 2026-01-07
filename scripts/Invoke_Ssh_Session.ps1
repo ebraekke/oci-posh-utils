@@ -116,7 +116,6 @@ catch {
 }
 finally {
     ## START: generic section
-    Remove-Module oci-posh-utils
 
     ## To Maximize possible clean ups, continue on error 
     $ErrorActionPreference = "Continue"
@@ -125,6 +124,9 @@ finally {
     if ($null -ne $bastionSessionDescription) {
         Remove-OpuPortForwardingSessionFull -BastionSessionDescription $bastionSessionDescription
     }
+
+    ## Now remove module from memory
+    Remove-Module oci-posh-utils
 
     ## Delete temp SSH key file
     $ErrorActionPreference = 'SilentlyContinue' 
