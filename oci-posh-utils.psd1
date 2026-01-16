@@ -9,7 +9,7 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = "${PSScriptRoot}/private/psm1/oci-posh-utils.psm1"
+RootModule = "${PSScriptRoot}/private/psm1/file-loader.psm1"
 
 # Version number of this module.
 ModuleVersion = '0.8'
