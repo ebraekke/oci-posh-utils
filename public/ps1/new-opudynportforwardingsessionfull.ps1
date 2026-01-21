@@ -1,38 +1,29 @@
 <#
+<#
 .SYNOPSIS
-Create a port forwarding sesssion with OCI Bastion service.
+Create a dynamic port forwarding sesssion with OCI Bastion service.
 Generate SSH key pair to be used for session.
 Create the actual port forwarding SSH process.
 
 Return an object to the caller:
 
 $bastionSessionDescription = [PSCustomObject]@{
-    PSTypeName = 'OpuPortBastionSession.Object'
+    PSTypeName = 'OpuDynPortBastionSession.Object'
     BastionSession = $bastionSession
     SShProcess = $sshProcess
     LocalPort = $useThisPort
-    TargetHost = $TargetHost
-    TargetPort = $TargetPort
     SessionExpires = <SessionExpireTimeInLocalTime>
 }
         
 .DESCRIPTION
-Creates a port forwarding session with the OCI Bastion Service and the required SSH port forwarding process.
-This combo will allow you to connect through the Bastion service via a local port and to your destination: $TargetHost:$TargetPort   
-A path from the Bastion to the target is required.
+Creates a dynamic port forwarding session with the OCI Bastion Service and the required SSH port forwarding process.
+This combo will allow you to connect through the Bastion service via a local port and any destination reachable by the bastion service.  
+A path from the Bastion to the target(s) is required.
 The Bastion session inherits TTL from the Bastion (instance). 
-
-.PARAMETER TargetHost
-IP address of target host. 
-ValueFromPipeline = $true
 
 .PARAMETER BastionId
 OCID of Bastion with which to create a session.  
    
-.PARAMETER TargetPort
-Port number at TargetHost to create a session to. 
-Defaults to 22.  
-
 .PARAMETER LocalPort
 Local port to use for port forwarding. 
 Defaults to 0, means that it will be randomly assigned.
@@ -49,99 +40,20 @@ until there is a path from the local port to the destination.
 VPNs tend to make this even slower.
 
 .EXAMPLE 
-## Creating a forwarding session to the default port
-> $bastion_session = New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -TargetHost 10.0.1.249
-
-Creating ephemeral key pair
-Creating Port Forwarding Session to 10.0.1.249:22
-Waiting for creation of bastion session to complete
-Creating SSH tunnel
-Waiting for creation of SSH tunnel to complete
-
-> $bastion_session
-
-BastionSession : Oci.BastionService.Models.Session
-SShProcess     : System.Diagnostics.Process (Idle)
-LocalPort      : 9084
-Target         : 10.0.0.251:22
-SessionExpires : 13.10.2025 14:26:05
 
 .EXAMPLE 
-## Creating a forwarding session to a mysql port
-
-❯ $bastion_session = New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -TargetHost 10.0.1.249 -TargetPort 3306
-
-Creating ephemeral key pair
-Creating Port Forwarding Session to 10.0.1.249:3306
-Waiting for creation of bastion session to complete
-Creating SSH tunnel
-Waiting for creation of SSH tunnel to complete
-
-❯ $bastion_session
-
-BastionSession : Oci.BastionService.Models.Session
-SShProcess     : System.Diagnostics.Process (Idle)
-LocalPort      : 9043
-Target         : 10.0.1.249:3306
-SessionExpires : 16.10.2025 13:49:06
 
 .EXAMPLE 
-## Create multiple forwarding sessions to the (same) default target port, starting at port 9003. 
-
-❯ $ip_address_list
-10.0.1.128
-10.0.1.161
-10.0.1.30
-
-$bastion_session_list = $ip_address_list | New-OpuPortForwardingSessionFull -BastionId $bastion_ocid -LocalPort 9003
-
-Creating ephemeral key pair
-Creating Port Forwarding Session to 10.0.1.128:22
-Waiting for creation of bastion session to complete
-Creating SSH tunnel
-Waiting for creation of SSH tunnel to complete
-Creating ephemeral key pair
-Creating Port Forwarding Session to 10.0.1.161:22
-Waiting for creation of bastion session to complete
-Creating SSH tunnel
-Waiting for creation of SSH tunnel to complete
-Creating ephemeral key pair
-Creating Port Forwarding Session to 10.0.1.30:22
-Waiting for creation of bastion session to complete
-Creating SSH tunnel
-Waiting for creation of SSH tunnel to complete
-
-❯ $bastion_session_list
-
-BastionSession : Oci.BastionService.Models.Session
-SShProcess     : System.Diagnostics.Process (Idle)
-LocalPort      : 9003
-Target         : 10.0.1.128:22
-SessionExpires : 20.10.2025 12:24:05
-
-BastionSession : Oci.BastionService.Models.Session
-SShProcess     : System.Diagnostics.Process (Idle)
-LocalPort      : 9004
-Target         : 10.0.1.161:22
-SessionExpires : 20.10.2025 12:24:46
-
-BastionSession : Oci.BastionService.Models.Session
-SShProcess     : System.Diagnostics.Process (Idle)
-LocalPort      : 9005
-Target         : 10.0.1.30:22
-SessionExpires : 20.10.2025 12:25:28
 #>
-function New-OpuPortForwardingSessionFull {
+function New-OpuDynPortForwardingSessionFull {
+    [CmdletBinding()]
     param (
-        [Parameter(Mandatory, ValueFromPipeline=$true, HelpMessage='IP address of target host')]
-        [String]$TargetHost,
-        [Parameter(Mandatory, HelpMessage='OCID of Bastion')]
+        [Parameter(Mandatory, HelpMessage = 'OCID of Bastion')]
         [String]$BastionId, 
-        [Int32]$TargetPort=22,
-        [Parameter(HelpMessage='Use this local port, 0 means assign')]
-        [Int32]$LocalPort=0,
-        [Parameter(HelpMessage='Seconds to wait before returning the session to the caller')]
-        [Int32]$WaitForConnectSeconds=10
+        [Parameter(HelpMessage = 'Use this local port, 0 means assign')]
+        [Int32]$LocalPort = 0,
+        [Parameter(HelpMessage = 'Seconds to wait before returning the session to the caller')]
+        [Int32]$WaitForConnectSeconds = 10
     )
 
     begin {
@@ -150,7 +62,7 @@ function New-OpuPortForwardingSessionFull {
         $ErrorActionPreference = "Stop" 
         ## END: generic section
 
-        Write-Verbose "New-OpuPortForwardingSessionFull: begin"
+        Write-Verbose "New-OpuDynPortForwardingSessionFull: begin"
 
         ## "Iterator" for assigning fixed port numbers 
         $globalCount = 0
@@ -160,7 +72,6 @@ function New-OpuPortForwardingSessionFull {
         try {
             ## Check input parameters
             Test-OpuOcidString -OcidString $BastionId -IsOfType "bastion"
-            Test-OpuIpAddr -IpAddr $TargetHost
 
             ## Validate input
             if ((5 -gt $WaitForConnectSeconds) -or (60 -lt $WaitForConnectSeconds)) {
@@ -189,9 +100,7 @@ function New-OpuPortForwardingSessionFull {
             ## Generate ephemeral key pair with  name: bastionkey-${now}.${useThisPort}
             Write-Host "Creating ephemeral key pair"
             $now = Get-Date -Format "yyyy_MM_dd_HH_mm_ss"
-            $keyFile= New-OpuSshKeyFromKeygen -KeyBaseName (-join ("bastionkey-", "${now}-${useThisPort}"))
-
-            Write-Host "Creating Port Forwarding Session to ${TargetHost}:${TargetPort}"
+            $keyFile = New-OpuSshKeyFromKeygen -KeyBaseName ( -join ("bastionkey-", "${now}-${useThisPort}"))
 
             try {
                 $bastionService = Get-OCIBastion -BastionId $BastionId  -WaitForLifecycleState Active -WaitIntervalSeconds 0 -ErrorAction Stop
@@ -199,12 +108,12 @@ function New-OpuPortForwardingSessionFull {
             catch {
                 throw "Get-OCIBastion: $_"
             }    
+
+            Write-Host "Creating Dynamic Port Forwarding Session to ${bastionService.Name}"
+            
             $maxSessionTtlInSeconds = $bastionService.MaxSessionTtlInSeconds
 
-            ## Details of target
-            $targetResourceDetails = New-Object -TypeName 'Oci.bastionService.Models.CreatePortForwardingSessionTargetResourceDetails'
-            $targetResourceDetails.TargetResourcePrivateIpAddress = $TargetHost    
-            $targetResourceDetails.TargetResourcePort = $TargetPort
+            $targetResourceDetails = New-Object -TypeName 'Oci.bastionService.Models.CreateDynamicPortForwardingSessionTargetResourceDetails'
 
             ## Details of keyfile
             $keyDetails = New-Object -TypeName 'Oci.bastionService.Models.PublicKeyDetails'
@@ -275,12 +184,10 @@ function New-OpuPortForwardingSessionFull {
             ##
             ## Create return Object
             $localBastionSession = [PSCustomObject]@{
-                PSTypeName     = 'OpuPortBastionSession.Object'
+                PSTypeName     = 'OpuDynPortBastionSession.Object'
                 BastionSession = $bastionSession
                 SShProcess     = $sshProcess
                 LocalPort      = $useThisPort
-                TargetHost     = $TargetHost
-                TargetPort     = $TargetPort
                 SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds)
             }
 
@@ -291,7 +198,7 @@ function New-OpuPortForwardingSessionFull {
         }
         catch {
             ## Pass exception on back
-            throw "New-OpuPortForwardingSessionFull: $_"
+            throw "New-OpuDynPortForwardingSessionFull: $_"
         }
         finally {
             ## To Maximize possible clean ups, continue on error, fail silently
@@ -304,7 +211,7 @@ function New-OpuPortForwardingSessionFull {
     }
 
     end {
-        Write-Verbose "New-OpuPortForwardingSessionFull: end"
+        Write-Verbose "New-OpuDynPortForwardingSessionFull: end"
 
         ## Done, restore settings
         $ErrorActionPreference = $globalUserErrorActionPreference
