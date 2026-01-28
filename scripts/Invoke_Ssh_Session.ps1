@@ -101,7 +101,7 @@ try {
     $bastionSessionDescription = New-OpuPortForwardingSessionFull -BastionId $BastionId -TargetHost $TargetHost -TargetPort $TargetPort
     $localPort = $bastionSessionDescription.LocalPort
 
-    $sshKey= New-OpuSshKeyFromSecret -SecretId $SecretId -KeyBaseName $bastionSessionDescription.BastionSession.DisplayName    
+    $sshKey = New-OpuSshKeyFromSecret -SecretId $SecretId -KeyBaseName $bastionSessionDescription.BastionSession.DisplayName    
     
     ## NOTE 1: 'localhost' and not '127.0.0.1'
     ## Behaviour with both ssh and putty is unreliable when not using 'localhost'.
