@@ -16,11 +16,9 @@ Host <HOST-BASE-NAME>1
   User <USERNAME-GIVEN-WHEN-SESSION-CREATED>
   StrictHostKeyChecking no
   UserKnownHostsFile=/dev/null
-  IdentityFile <FULL-NAME-OF-INPUT-KEY-HERE>
-  UserKnownHostsFile /dev/null
   ProxyCommand ssh -i /tmp/bastionkey-2025_11_07_11_25_41-9087 -W %h:%p -p 22 ocid1.bastionsession.oc1.eu-frankfurt-1.<OCI-UUID>@host.bastion.<OCI-REGION>.oci.oraclecloud.com
 
-The validity of the output can be verified by execyting "ssh -F <tempfile> <target>".
+The validity of the output can be verified by execyting "ssh -F <tempfile> <target> -i <target-keyfile>".
 
 .PARAMETER BastionSessionDescription
 
@@ -63,12 +61,6 @@ function New-OpuSshConfigFileFromBastionManagedSession {
     param (
         [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'Full Bastion Port Forwarding Session Description Object')]
         [PSTypeName('OpuManagedBastionSession.Object')]$BastionSessionDescription, 
-        [Parameter(Mandatory, HelpMessage = 'Base name to use when defining Host in config')]
-        [String]$HostBaseName,
-        [Parameter(HelpMessage = 'Append serial number (1..n) to $HostBaseName')]
-        [bool]$AppendSerial = $true,
-        [Parameter(Mandatory, HelpMessage = 'Name of keyfile to add to target for the TargetUser')]
-        [String]$TargetKeyFile,
         [Parameter(HelpMessage = 'Is this a production config ($false)')]
         [bool]$IsProd = $false
     )
@@ -101,18 +93,11 @@ function New-OpuSshConfigFileFromBastionManagedSession {
 
 
         Out-File -Append -FilePath $tempFile -InputObject "#" 
-        Out-File -Append -FilePath $tempFile -InputObject "# ${HostBaseName} number ${globalCount} - target ${_targetHost}"
 
-        if ($false -eq $AppendSerial) {
-            Out-File -Append -FilePath $tempFile -InputObject "Host ${HostBaseName}"
-        } else {
-            Out-File -Append -FilePath $tempFile -InputObject "Host ${HostBaseName}${globalCount}"
-        }
+        Out-File -Append -FilePath $tempFile -InputObject "Host ${_targetHost}"
 
-        Out-File -Append -FilePath $tempFile -InputObject "  Hostname ${_targetHost}"
         Out-File -Append -FilePath $tempFile -InputObject "  User ${_targetUser}"
         Out-File -Append -FilePath $tempFile -InputObject "  Port ${_targetPort}"
-        Out-File -Append -FilePath $tempFile -InputObject "  IdentityFile ${TargetKeyFile}"
         Out-File -Append -FilePath $tempFile -InputObject "  ServerAliveInterval 30"
         Out-File -Append -FilePath $tempFile -InputObject "  ServerAliveCountMax 4"
 
@@ -137,5 +122,4 @@ function New-OpuSshConfigFileFromBastionManagedSession {
 
         $tempFile.FullName
     }    
-    
 }

@@ -180,7 +180,6 @@ function New-OpuDynPortForwardingSessionFull {
                 throw "Start-Process: $_"
             }
 
-            ## TODO: Add "IsActive member to Object to determine if session was destroyed before expiration"?
             ##
             ## Create return Object
             $localBastionSession = [PSCustomObject]@{
@@ -188,7 +187,7 @@ function New-OpuDynPortForwardingSessionFull {
                 BastionSession = $bastionSession
                 SShProcess     = $sshProcess
                 LocalPort      = $useThisPort
-                SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds)
+                SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds - 300)
             }
 
             Write-Host "Waiting for creation of SSH tunnel to complete"

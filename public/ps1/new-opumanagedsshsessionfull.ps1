@@ -7,7 +7,6 @@ Return an object to the caller:
 $bastionSessionDescription = [PSCustomObject]@{
     PSTypeName     = 'OpuManagedBastionSession.Object'
     BastionSession = $bastionSession
-    SShCmd         = <fully formated ssh command>
     KeyFile        = <key file generated for the session>
     JumpUser       = <jump user for the session>
     JumpHost       = <jump host for the session>
@@ -73,6 +72,7 @@ Line |
 
 #>
 function New-OpuManagedSshSessionFull {
+    [CmdletBinding()]
     param (
         [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'OCID of target host')]
         [String]$TargetHostId,
@@ -81,8 +81,8 @@ function New-OpuManagedSshSessionFull {
         [Int32]$TargetPort = 22,
         [Parameter(HelpMessage = 'User to connect at target (opc)')]
         [String]$OsUser = "opc",
-        [Parameter(HelpMessage = 'Merge in the name of this keyfile to SshArgs in return object ($null)')]
-        [String]$TargetKeyFile = $null
+        [Parameter(HelpMessage = 'Is this a production config ($false)')]
+        [bool]$IsProd = $false
     )
 
     begin {
@@ -151,7 +151,7 @@ function New-OpuManagedSshSessionFull {
             ## This process needs more time than the regular 100*1000 ms that is default for OCI Posh modules
             ## There is a lot of stuff happening on the back-end
             try {
-                $bastionSession = New-OciBastionSession -CreateSessionDetails $sessionDetails -ErrorAction Stop -TimeOutInMillis (5*60*1000)
+                $bastionSession = New-OciBastionSession -CreateSessionDetails $sessionDetails -ErrorAction Stop -TimeOutInMillis (5 * 60 * 1000)
             }
             catch {
                 throw "New-OciBastionSession: $_"
@@ -173,14 +173,6 @@ function New-OpuManagedSshSessionFull {
             if ($hashPos -gt 0) {
                 $strlen = $sshArgs.length
                 $sshArgs = $sshArgs.Remove($hashPos, $strlen - $hashPos)
-            }
-
-            ## Replace second occurence of -i
-            $sshArgs = $sshArgs.replace("ProxyCommand=`"ssh -i <privateKey>", "ProxyCommand=`"ssh -i ${keyFile}") 
-
-            ## Insert the reference to the caller's keyfile -- if requested
-            if ($null -ne $TargetKeyFile) {
-                $sshArgs = $sshArgs.Replace("<privateKey>", $TargetKeyFile)
             }
 
             ## Let's extract the data (user @ host) needed for the return object
@@ -210,18 +202,51 @@ function New-OpuManagedSshSessionFull {
                 throw "Extract of user @ host failed: $_"
             }
 
-            ## Create return Object
+            ## Now create ssh_config string 
+            if ($false -eq $IsProd) {
+                if ($false -eq $IsWindows) {
+                    $userKnownHostsFile = "`n  UserKnownHostsFile=/dev/null"
+                }
+                else {
+                    $userKnownHostsFile = "`n  UserKnowHostFile=\\.\NUL"
+                }
+
+                $sshConfig = 
+                "Host ${TargetHost}" + 
+                "`n  Hostname ${TargetHost}" +
+                "`n  User ${TargetUser}" +
+                "`n  Port ${TargetPort}" +
+                "`n  ServerAliveInterval 30" + 
+                "`n  ServerAliveCountMax 4" +
+                "`n  StrictHostKeyChecking no" + 
+                $userKnownHostsFile +
+                "`n  ProxyCommand ssh -i ${keyFile} -W %h:%p -p 22 ${JumpUser}@${JumpHost}"
+                "`n"
+            }
+            else {
+                $sshConfig = 
+                "Host ${TargetHost}" + 
+                "`n  Hostname ${TargetHost}" +
+                "`n  User ${TargetUser}" +
+                "`n  Port ${TargetPort}" +
+                "`n  ServerAliveInterval 30" + 
+                "`n  ServerAliveCountMax 4" +
+                "`n  ProxyCommand ssh -i ${keyFile} -W %h:%p -p 22 ${JumpUser}@${JumpHost}"
+                "`n"
+            }
+
+            ## Create return Object. remove 5min (300 secs) from estimated expiry
             $localBastionSession = [PSCustomObject]@{
                 PSTypeName     = 'OpuManagedBastionSession.Object'
                 BastionSession = $bastionSession
-                SShCmd         = $sshArgs
                 KeyFile        = $keyFile
                 JumpUser       = $jumpUser
                 JumpHost       = $jumpHost
                 TargetUser     = $targetUser
                 TargetHost     = $targetHost
                 TargetPort     = $TargetPort
-                SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds)
+                SshConfig      = $sshConfig
+                SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds - (5 * 60))
             }
 
             $localBastionSession
