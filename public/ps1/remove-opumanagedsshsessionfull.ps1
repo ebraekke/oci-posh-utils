@@ -12,13 +12,13 @@ Output related to the bastion session deletion will be displayed.
 $BastionSessionDescription = [PSCustomObject]@{
     PSTypeName     = 'OpuManagedBastionSession.Object'
     BastionSession = $bastionSession
-    SShArgs        = <fully formated ssh command>
     KeyFile        = <key file generated for the session>
     JumpUser       = <jump user for the session>
     JumpHost       = <jump host for the session>
     TargetUser     = <target user for the session>
     TargetHost     = <target host for the session>
     TargetPort     = <target port for the session<
+    SshConfig      = <entry for ssh config file>
     SessionExpires = <SessionExpireTimeInLocalTime>
 }
  

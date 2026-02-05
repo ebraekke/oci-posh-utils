@@ -4,7 +4,7 @@ Create a mamnaged SSH sesssion with OCI Bastion service.
 
 Return an object to the caller:
 
-$bastionSessionDescription = [PSCustomObject]@{
+$BastionSessionDescription = [PSCustomObject]@{
     PSTypeName     = 'OpuManagedBastionSession.Object'
     BastionSession = $bastionSession
     KeyFile        = <key file generated for the session>
@@ -13,10 +13,10 @@ $bastionSessionDescription = [PSCustomObject]@{
     TargetUser     = <target user for the session>
     TargetHost     = <target host for the session>
     TargetPort     = <target port for the session<
+    SshConfig      = <entry for ssh config file>
     SessionExpires = <SessionExpireTimeInLocalTime>
 }
 
-The SshCmd attribute contains a formated SSH command string that can be used directly on the command line.
 The KeyFile, JumpUser/JumpHost & TargetUser/TargetHost/TargetPort are intended for use with automation tools 
 such as Ansible and PyInfra.   
         
@@ -113,7 +113,8 @@ function New-OpuManagedSshSessionFull {
             Write-Host "Creating ephemeral key pair"
             $now = Get-Date -Format "yyyy_MM_dd_HH_mm_ss"
             $rand = Get-Random -Minimum 9001 -Maximum 9099
-            $keyFile = New-OpuSshKeyFromKeygen -KeyBaseName ( -join ("bastionkey-", "${now}-${rand}"))
+            $baseName = -join ("bastionkey-", "${now}-${rand}")
+            $keyFile = New-OpuSshKeyFromKeygen -KeyBaseName $baseName
 
             Write-Host "Creating Manged SSH Session to ${TargetPort} at target"
 
@@ -203,6 +204,7 @@ function New-OpuManagedSshSessionFull {
             }
 
             ## Now create ssh_config string 
+            ## Make sure to have a '+' sign on all lines, if not strange things happen!
             if ($false -eq $IsProd) {
                 if ($false -eq $IsWindows) {
                     $userKnownHostsFile = "`n  UserKnownHostsFile=/dev/null"
@@ -220,7 +222,7 @@ function New-OpuManagedSshSessionFull {
                 "`n  ServerAliveCountMax 4" +
                 "`n  StrictHostKeyChecking no" + 
                 $userKnownHostsFile +
-                "`n  ProxyCommand ssh -i ${keyFile} -W %h:%p -p 22 ${JumpUser}@${JumpHost}"
+                "`n  ProxyCommand ssh -i ${keyFile} -W %h:%p -p 22 ${JumpUser}@${JumpHost}" +
                 "`n"
             }
             else {
@@ -231,7 +233,7 @@ function New-OpuManagedSshSessionFull {
                 "`n  Port ${TargetPort}" +
                 "`n  ServerAliveInterval 30" + 
                 "`n  ServerAliveCountMax 4" +
-                "`n  ProxyCommand ssh -i ${keyFile} -W %h:%p -p 22 ${JumpUser}@${JumpHost}"
+                "`n  ProxyCommand ssh -i ${keyFile} -W %h:%p -p 22 ${JumpUser}@${JumpHost}" +
                 "`n"
             }
 
