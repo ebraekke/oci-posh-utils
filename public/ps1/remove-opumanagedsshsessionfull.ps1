@@ -30,8 +30,9 @@ $BastionSessionDescription = [PSCustomObject]@{
 #>
 
 function Remove-OpuManagedSshsessionFull {
+    [CmdletBinding()]
     param (
-        [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'Full Bastion Port Forwarding Session Description Object')]
+        [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'Full Bastion Managed SSH Session Description Object')]
         [PSTypeName('OpuManagedBastionSession.Object')]$BastionSessionDescription
     )
 
