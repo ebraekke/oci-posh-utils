@@ -5,7 +5,9 @@ Create a mamnaged SSH sesssion with OCI Bastion service.
 Return an object to the caller:
 
 $BastionSessionDescription = [PSCustomObject]@{
-    PSTypeName     = 'OpuManagedBastionSession.Object'
+    PSTypeName     = 'OpuManagedSshSessionFull.Object'
+    TypeNameStr    = "OpuManagedSshSessionFull.Object"
+    LifecycleState = "Active"
     BastionSession = $bastionSession
     KeyFile        = <key file generated for the session>
     JumpUser       = <jump user for the session>
@@ -239,7 +241,9 @@ function New-OpuManagedSshSessionFull {
 
             ## Create return Object. remove 5min (300 secs) from estimated expiry
             $localBastionSession = [PSCustomObject]@{
-                PSTypeName     = 'OpuManagedBastionSession.Object'
+                PSTypeName     = 'OpuManagedSshSessionFull.Object'
+                TypeNameStr    = "OpuManagedSshSessionFull.Object"
+                LifecycleState = "Active"
                 BastionSession = $bastionSession
                 KeyFile        = $keyFile
                 JumpUser       = $jumpUser

@@ -1,41 +1,35 @@
 <#
 .SYNOPSIS
-Removes all traces of previously created managed SSH session, that is Bastion session and files process.
+Removes all traces of previously created "full session", that is Bastion session and SSH process.
 
 .DESCRIPTION
-The session is destroyed. 
+The SSH process and the bastion session are destroyed. 
 Process will will continue if a failure happens.
 Output related to the bastion session deletion will be displayed. 
 
 .PARAMETER BastionSessionDescription
 
-$BastionSessionDescription = [PSCustomObject]@{
-    PSTypeName     = 'OpuManagedBastionSession.Object'
-    TypeNameStr    = "OpuManagedBastionSession.Object"
+$bastionSessionDescription = [PSCustomObject]@{
+    PSTypeName     = 'OpuDynPortForwardingSession.Object'
+    TypeNameStr    = "OpuDynPortForwardingSession.Object"
     LifecycleState = "Active"
     BastionSession = $bastionSession
-    KeyFile        = <key file generated for the session>
-    JumpUser       = <jump user for the session>
-    JumpHost       = <jump host for the session>
-    TargetUser     = <target user for the session>
-    TargetHost     = <target host for the session>
-    TargetPort     = <target port for the session<
-    SshConfig      = <entry for ssh config file>
+    KeyFileContent = <Content of ssh key file>
     SessionExpires = <SessionExpireTimeInLocalTime>
 }
  
-.EXAMPLE 
-## Ex 1
 
 .EXAMPLE 
-## Ex 2
+
+.EXAMPLE 
+
 #>
 
-function Remove-OpuManagedSshsessionFull {
+function Remove-OpuDynPortForwardingSession {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'Full Bastion Managed SSH Session Description Object')]
-        [PSTypeName('OpuManagedSshSessionFull.Object')]$BastionSessionDescription
+        [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'Bastion Dynamic Port Forwarding Session Description Object')]
+        [PSTypeName('OpuDynPortForwardingSession.Object')]$BastionSessionDescription
     )
 
     begin {
@@ -44,22 +38,12 @@ function Remove-OpuManagedSshsessionFull {
         $ErrorActionPreference = "Continue" 
         ## END: generic section
 
-        Write-Verbose "Remove-OpuPortForwardingSessionFull: begin"
+        Write-Verbose "Remove-OpuDynPortForwardingSession: begin"
     }
 
     process {
 
         Import-Module OCI.PSModules.Bastion
-
-        ## Remove temp SSH key files irrespectively
-        ## set local variable, don't know why -- but it works!
-        $removeMe = $BastionSessionDescription.Keyfile
-        Write-Verbose "Removing: ${removeMe}"
-        Remove-Item $removeMe -ErrorAction SilentlyContinue
-
-        $removeMe = $removeMe + ".pub"
-        Write-Verbose "Removing: ${removeMe}"
-        Remove-Item $removeMe -ErrorAction SilentlyContinue
 
         ## Already deleted?
         if ("Deleted" -eq $BastionSessionDescription.LifecycleState) {
@@ -79,16 +63,16 @@ function Remove-OpuManagedSshsessionFull {
             Remove-OCIBastionSession -SessionId $BastionSessionDescription.BastionSession.Id -Force -ErrorAction Ignore | Out-Null            
         }
         catch {
-            Write-Error "Remove-OpuManagesSshSessionFull: $_"
-        } 
+            Write-Error "Remove-OpuDynPortForwardingSession: $_"
+        }
 
         ## Mark as deleted
         $BastionSessionDescription.LifecycleState = "Deleted"
     }
    
     end {
-        Write-Verbose "Remove-OpuManagesSshSessionFull: end"
-        
+        Write-Verbose "Remove-OpuDynPortForwardingSession: end"
+
         ## Done, restore settings
         $ErrorActionPreference = $globalUserErrorActionPreference
     }    

@@ -18,7 +18,7 @@ $BastionSessionDescription = [PSCustomObject]@{
 
 param(
     [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'Full Bastion Managed SSH Session Description Object')]
-    [PSTypeName('OpuManagedBastionSession.Object')]$BastionSessionDescription,
+    [PSTypeName('OpuManagedSshSessionFull.Object')]$BastionSessionDescription,
     [Parameter(Mandatory, HelpMessage = 'Content of SSH key')]
     [String]$KeyContent,
     [Parameter(HelpMessage = 'Is debug on ($false)')]
@@ -47,15 +47,14 @@ try {
     $BastionSessionDescription.SshConfig | Out-File -FilePath $sshConfig.FullName
 
     ## Format all relevant parameters 
-    $_sshKeyFullName = ${sshkey}.Fullname
-    $_sshConfigFullName = ${sshConfig}.Fullname
+    $_sshKeyFullName = $sshkey.Fullname
+    $_sshConfigFullName = $sshConfig.Fullname
 
     $_targetUser = $BastionSessionDescription.TargetUser
     $_targetHost = $BastionSessionDescription.TargetHost
     $_targetPort = $BastionSessionDescription.TargetPort
 
     ssh -4 $_targetHost -p $_targetPort -l $_targetUser -F $_sshConfigFullName -i $_sshKeyFullName
-
 }
 catch {
     ## What else can we do? 

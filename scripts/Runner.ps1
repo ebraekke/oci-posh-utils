@@ -39,10 +39,10 @@ try {
         $db_ocid_list = $TargetOcidsJson | ConvertFrom-Json
     }
     catch {
-        throw "ConvertFrom-Json: _"
+        throw "ConvertFrom-Json: $_"
     }
 
-    ## VAlidate each eøemeny of ocid list
+    ## Validate each eøemeny of ocid list
     foreach ($db_ocid in $db_ocid_list) {
         Test-OpuOcidString -OcidString $db_ocid -IsOfType "instance"
     }

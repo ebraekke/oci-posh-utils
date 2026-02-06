@@ -60,7 +60,7 @@ When $false:
 function New-OpuSshConfigFileFromBastionManagedSession {
     param (
         [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'Full Bastion Port Forwarding Session Description Object')]
-        [PSTypeName('OpuManagedBastionSession.Object')]$BastionSessionDescription, 
+        [PSTypeName('OpuManagedSshSessionFull.Object')]$BastionSessionDescription, 
         [Parameter(HelpMessage = 'Is this a production config ($false)')]
         [bool]$IsProd = $false
     )
@@ -68,7 +68,7 @@ function New-OpuSshConfigFileFromBastionManagedSession {
     begin {
         ## START: generic section 
         $globalUserErrorActionPreference = $ErrorActionPreference
-        $ErrorActionPreference = "Continue" 
+        $ErrorActionPreference = "Stop" 
         ## END: generic section
 
         ## "Iterator" for assigning host names
