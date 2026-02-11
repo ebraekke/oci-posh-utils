@@ -1,4 +1,6 @@
 <#
+
+-A for agent forward
 .PARAMETER BastionSessionDescription
 
 $BastionSessionDescription = [PSCustomObject]@{
@@ -54,7 +56,7 @@ try {
     $_targetHost = $BastionSessionDescription.TargetHost
     $_targetPort = $BastionSessionDescription.TargetPort
 
-    ssh -4 $_targetHost -p $_targetPort -l $_targetUser -F $_sshConfigFullName -i $_sshKeyFullName
+    ssh -A -4 $_targetHost -p $_targetPort -l $_targetUser -F $_sshConfigFullName -i $_sshKeyFullName
 }
 catch {
     ## What else can we do? 
