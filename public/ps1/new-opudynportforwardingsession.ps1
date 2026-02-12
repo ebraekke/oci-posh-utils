@@ -6,15 +6,18 @@ Create the actual port forwarding SSH process.
 
 Return an object to the caller:
 
-$bastionSessionDescription = [PSCustomObject]@{
-    PSTypeName = 'OpuDynPortForwardingSession.Object'
+$localBastionSession = [PSCustomObject]@{
+    PSTypeName  = 'OpuDynPortForwardingSession.Object'
     TypeNameStr = "OpuDynPortForwardingSession.Object"
-    LifecycleState = "Active"
-    BastionSession = $bastionSession
-    KeyFileContent = <Content of ssh key file>
-    SessionExpires = <SessionExpireTimeInLocalTime>
+    id          = $bastionSession.Id
+    data        = [PSCustomObject]@{
+        LifecycleState = "Active"
+        BastionSession = $bastionSession
+        KeyFileContent = $keyFileContent
+        SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds - 300)
+    }
 }
-        
+
 #>
 function New-OpuDynPortForwardingSession {
     [CmdletBinding()]
@@ -105,12 +108,15 @@ function New-OpuDynPortForwardingSession {
             ##
             ## Create return Object, pad eith 5 mins on estimated expiry just for safety
             $localBastionSession = [PSCustomObject]@{
-                PSTypeName     = 'OpuDynPortForwardingSession.Object'
-                TypeNameStr    = "OpuDynPortForwardingSession.Object"
-                LifecycleState = "Active"
-                BastionSession = $bastionSession
-                KeyFileContent = $keyFileContent
-                SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds - 300)
+                PSTypeName  = 'OpuDynPortForwardingSession.Object'
+                TypeNameStr = "OpuDynPortForwardingSession.Object"
+                id          = $bastionSession.Id
+                data        = [PSCustomObject]@{
+                    LifecycleState = "Active"
+                    BastionSession = $bastionSession
+                    KeyFileContent = $keyFileContent
+                    SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds - 300)
+                }
             }
 
             $localBastionSession

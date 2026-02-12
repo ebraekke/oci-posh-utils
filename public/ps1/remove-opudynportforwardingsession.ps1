@@ -1,21 +1,24 @@
 <#
 .SYNOPSIS
-Removes all traces of previously created "full session", that is Bastion session and SSH process.
+Removes bastion session of type dyn.
 
 .DESCRIPTION
-The SSH process and the bastion session are destroyed. 
+The bastion session is destroyed. 
 Process will will continue if a failure happens.
 Output related to the bastion session deletion will be displayed. 
 
 .PARAMETER BastionSessionDescription
 
-$bastionSessionDescription = [PSCustomObject]@{
-    PSTypeName     = 'OpuDynPortForwardingSession.Object'
-    TypeNameStr    = "OpuDynPortForwardingSession.Object"
-    LifecycleState = "Active"
-    BastionSession = $bastionSession
-    KeyFileContent = <Content of ssh key file>
-    SessionExpires = <SessionExpireTimeInLocalTime>
+$BastionSessionDescription = [PSCustomObject]@{
+    PSTypeName  = 'OpuDynPortForwardingSession.Object'
+    TypeNameStr = "OpuDynPortForwardingSession.Object"
+    id          = $bastionSession.Id
+    data        = [PSCustomObject]@{
+        LifecycleState = "Active"
+        BastionSession = $bastionSession
+        KeyFileContent = $keyFileContent
+        SessionExpires = (Get-Date).AddSeconds($bastionSession.SessionTtlInSeconds - 300)
+    }
 }
  
 
@@ -46,28 +49,28 @@ function Remove-OpuDynPortForwardingSession {
         Import-Module OCI.PSModules.Bastion
 
         ## Already deleted?
-        if ("Deleted" -eq $BastionSessionDescription.LifecycleState) {
+        if ("Deleted" -eq $BastionSessionDescription.data.LifecycleState) {
             Write-Host "Already deleted, no action needed"
             return
         }
 
         ## Session has exipired?
-        if ((Get-Date) -gt $BastionSessionDescription.SessionExpires) {
+        if ((Get-Date) -gt $BastionSessionDescription.data.SessionExpires) {
             Write-Host "Expired, marking as `"Deleted`""
-            $BastionSessionDescription.LifecycleState = "Deleted"
+            $BastionSessionDescription.data.LifecycleState = "Deleted"
             return
         }
 
         ## Kill Bastion session, with Force, ignore output and error (it is the work request id)
         try {
-            Remove-OCIBastionSession -SessionId $BastionSessionDescription.BastionSession.Id -Force -ErrorAction Ignore | Out-Null            
+            Remove-OCIBastionSession -SessionId $BastionSessionDescription.data.BastionSession.Id -Force -ErrorAction Ignore | Out-Null            
         }
         catch {
             Write-Error "Remove-OpuDynPortForwardingSession: $_"
         }
 
         ## Mark as deleted
-        $BastionSessionDescription.LifecycleState = "Deleted"
+        $BastionSessionDescription.data.LifecycleState = "Deleted"
     }
    
     end {

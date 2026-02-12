@@ -42,16 +42,17 @@ try {
     }
 
     ## Grab data from input object, format filename
+    $sep = '_X_'
     $typeNameStr = $SaveMe.TypeNameStr
     $id = $SaveMe.id
     $data = $SaveMe.Data
-    $fileName = "${TypeNameStr}.${id}.json"
+    $fileName = "${TypeNameStr}${sep}${id}${sep}.json"
 
-    ## Check that there are no periods '.' in Object's name ($TypeNameStr)
+    ## Check that there are no sepetrators in Object's name ($TypeNameStr)
     ## Cannot have periods since it is used to convey meaning (or intent) 
-    $parts = $typeNameStr -split '\.'
+    $parts = $typeNameStr -split $sep
     if ($parts.length -gt 1) {
-        throw "Unsupprted, TypeNameStr field contains periods""."": $typeNameStr"
+        throw "Unsupprted, TypeNameStr field contains seperator ""${sep}"": $typeNameStr"
     }
 
     Write-Verbose "TypeNameStr = ${typeNameStr}"
@@ -59,7 +60,7 @@ try {
 
     ## Create output object
     try {
-        $data_json = $data | ConvertTo-Json 
+        $data_json = $data | ConvertTo-Json -Depth 100
     }
     catch {
         throw "Converting to JSON: $_"
