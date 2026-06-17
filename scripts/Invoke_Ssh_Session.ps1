@@ -23,9 +23,51 @@ param(
     [PSTypeName('OpuManagedSshSessionFull.Object')]$BastionSessionDescription,
     [Parameter(Mandatory, HelpMessage = 'Content of SSH key')]
     [String]$KeyContent,
+    [Parameter(HelpMessage = 'Create local tunnel using this spec ($null)')]
+    [String]$LocalPortDirective = $null,    
     [Parameter(HelpMessage = 'Is debug on ($false)')]
     [bool]$IsDebug = $false
 )
+
+function Test-SshLocalForward {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Directive
+    )
+
+    # Split the string by the colon delimiter
+    $parts = $Directive -split ':'
+
+    # Fail immediately if there are not exactly 3 parts
+    if ($parts.Count -ne 3) { return $false }
+
+    $localPort = $parts[0]
+    $targetIp = $parts[1]
+    $targetPort = $parts[2]
+
+    # Helper scriptblock to validate port numbers (1-65535)
+    $isValidPort = {
+        param($port)
+        if ($port -match '^\d+$') {
+            $num = [int]$port
+            return ($num -ge 1 -and $num -le 65535)
+        }
+        return $false
+    }
+
+    # Validate local port
+    if (-not (&$isValidPort $localPort)) { return $false }
+
+    # Validate target port
+    if (-not (&$isValidPort $targetPort)) { return $false }
+
+    # Validate target IP address using .NET parser
+    $isIpValid = [ipaddress]::TryParse($targetIp, [ref]$null)
+    if (-not $isIpValid) { return $false }
+
+    # All checks passed
+    return $true
+}
 
 Write-Verbose "Invoke_Ssh_Session.ps1: begin"
 
@@ -39,6 +81,13 @@ try {
 
     ## Validate that ssh is indeed available
     Test-OpuSshAvailable
+
+    ## validate input local port directive
+    if (-not [string]::IsNullOrWhiteSpace($LocalPortDirective) ) {
+        if (-not (Test-SshLocalForward $LocalPortDirective) ) {
+            throw "Invalid Local port directive: ${LocalPortDirective}"
+        }
+    } 
 
     ## Write key to file
     $sshKey = New-TemporaryFile
@@ -56,7 +105,14 @@ try {
     $_targetHost = $BastionSessionDescription.TargetHost
     $_targetPort = $BastionSessionDescription.TargetPort
 
-    ssh -A -4 $_targetHost -p $_targetPort -l $_targetUser -F $_sshConfigFullName -i $_sshKeyFullName
+    if ([string]::IsNullOrWhiteSpace($LocalPortDirective)) {
+        ssh -A -4 $_targetHost -p $_targetPort -l $_targetUser -F $_sshConfigFullName -i $_sshKeyFullName
+    }
+    else {
+        ## TODO: change to -N ?
+        ssh -L $LocalPortDirective -A -4 $_targetHost -p $_targetPort -l $_targetUser -F $_sshConfigFullName -i $_sshKeyFullName
+    }
+
 }
 catch {
     ## What else can we do? 
