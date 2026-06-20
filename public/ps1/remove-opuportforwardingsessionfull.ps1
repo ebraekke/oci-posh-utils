@@ -9,12 +9,13 @@ Output related to the bastion session deletion will be displayed.
 
 .PARAMETER BastionSessionDescription
 
-$BastionSessionDescription = [PSCustomObject]@{
-    PSTypeName = 'OpuBastionSession.Object'
+$bastionSessionDescription = [PSCustomObject]@{
+    PSTypeName = 'OpuPortBastionSession.Object'
     BastionSession = $bastionSession
     SShProcess = $sshProcess
-    LocalPort = $localPort
-    Target = "${TargetHost}:${TargetPort}"
+    LocalPort = $useThisPort
+    TargetHost = $TargetHost
+    TargetPort = $TargetPort
     SessionExpires = <SessionExpireTimeInLocalTime>
 }
  
@@ -40,7 +41,7 @@ Line |
 function Remove-OpuPortForwardingSessionFull {
     param (
         [Parameter(Mandatory, ValueFromPipeline=$true, HelpMessage='Full Bastion Port Forwarding Session Description Object')]
-        [PSTypeName('OpuBastionSession.Object')]$BastionSessionDescription
+        [PSTypeName('OpuPortBastionSession.Object')]$BastionSessionDescription
     )
 
     begin {

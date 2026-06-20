@@ -37,8 +37,9 @@ New-OpuSshKeyFromKeygen: New-OpuSshKeyFromKeygen: Test-Executable: ssh not found
 
 function New-OpuSshKeyFromKeygen {
     param(
-        [Parameter(Mandatory, HelpMessage='Use this base name')]
-        [String]$KeyBaseName
+        [Parameter(Mandatory, HelpMessage = 'Use this base name')]
+        [String]$KeyBaseName,
+        [bool]$OverWriteExisting = $false
     )
 
     try {
@@ -56,21 +57,30 @@ function New-OpuSshKeyFromKeygen {
         $tmpDir = Get-TempDir
         $keyFile = -join ("${tmpDir}/", $KeyBaseName) 
 
-        ## throw error if file exists
+        ## throw error if file exists and $OverWrite = $false
         if (Test-Path -Path $keyFile) {
-            throw "${keyFile} already exists."
+            if ($OverWriteExisting -eq $false) {
+                throw "${keyFile} already exists."
+            } 
+            else {
+                Remove-Item -Path $keyFile
+            }
         }
 
         ## TODO: Validate that it is the same on all platforms ... 
+        ## Note: Pipe ouput to null to avoid side effects in pipelines
         try {
             if ($IsWindows) {
-                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' 
+                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' | Out-Null
             }
             elseif ($IsLinux) {
-                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' 
+                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' | Out-Null
+            }
+            elseif ($IsMacOs) {
+                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' | Out-Null
             }
             else {
-                throw "Platform not supported ... how did you get here?"
+                throw "This should not be possible ... how did you get here?"
             }
         }
         catch {
@@ -79,12 +89,14 @@ function New-OpuSshKeyFromKeygen {
 
         $keyFile
 
-    } catch { 
+    }
+    catch { 
         ## What else can we do? 
         Write-Error "New-OpuSshKeyFromKeygen: $_"
         return $false
 
-    } finally {
+    }
+    finally {
         Write-Verbose "New-OpuSshKeyFromKeygen: end"
 
         ## Done, restore settings

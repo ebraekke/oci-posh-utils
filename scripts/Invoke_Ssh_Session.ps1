@@ -1,103 +1,150 @@
 <#
-.SYNOPSIS
-Invoke  an SSH  sesssion with a target host accessible through the OCI Bastion service.
 
-.DESCRIPTION
-Using the Bastion service and tunneling a SSH session will be invoked on the target host. 
-A ephemeral key pair for the Bastion session is created (and later destroyed). 
-Since the script relies on port forwarding, the bastion agent is not a requirment on the target.  
-This combo will allow you to "ssh" through the Bastion service via a local port and to your destination: $TargetHost:$TargetPort   
-A path from the Bastion to the target is required.
-The Bastion session inherits TTL from the Bastion (instance). 
+-A for agent forward
+.PARAMETER BastionSessionDescription
 
-.PARAMETER BastionId
-OCID of Bastion with wich to create a session. 
- 
-.PARAMETER TargetHost
-IP address of target host. 
+$BastionSessionDescription = [PSCustomObject]@{
+    PSTypeName     = 'OpuManagedBastionSession.Object'
+    BastionSession = $bastionSession
+    KeyFile        = <key file generated for the session>
+    JumpUser       = <jump user for the session>
+    JumpHost       = <jump host for the session>
+    TargetUser     = <target user for the session>
+    TargetHost     = <target host for the session>
+    TargetPort     = <target port for the session<
+    SshConfig      = <entry for ssh config file>
+    SessionExpires = <SessionExpireTimeInLocalTime>
+}
 
-.PARAMETER SecretId
-OCID of secret holding the SSH key for this host. 
-
-.PARAMETER TargetPort
-Port number at TargetHost to create a session to. 
-Defaults to 22.  
-
-.PARAMETER OsUser
-Os user to connect with at target. 
-Defaults to opc. 
-
-.EXAMPLE 
-## Creating a SSH session to the default port with the default user
-❯ .\Invoke_Ssh_Session.ps1 -BastionId $bastion_ocid -TargetHost 10.0.1.102 -SecretId $ssh_key_ocid
-Getting the SSH key from the secrets vault
-Creating ephemeral key pair
-Creating Port Forwarding Session to 10.0.1.102:22
-Waiting for creation of bastion session to complete
-Creating SSH tunnel
-Waiting until SSH tunnel is ready (10 seconds)
-Validating downloaded key...
-
-...
-
-Last login: Sun Mar  5 16:29:54 2023 from 10.0.0.49
 #>
 
 param(
-    [Parameter(Mandatory, HelpMessage='OCID of Bastion')]
-    [String]$BastionId, 
-    [Parameter(Mandatory,HelpMessage='IP address of target host')]   
-    [String]$TargetHost,
-    [Parameter(Mandatory, HelpMessage='OCID of secret hold SSH key')]
-    [String]$SecretId,
-    [Parameter(HelpMessage='Port at Target host')]
-    [Int32]$TargetPort=22,
-    [Parameter(HelpMessage='User to connect at target (opc)')]
-    [String]$OsUser="opc"
+    [Parameter(Mandatory, ValueFromPipeline = $true, HelpMessage = 'Full Bastion Managed SSH Session Description Object')]
+    [PSTypeName('OpuManagedSshSessionFull.Object')]$BastionSessionDescription,
+    [Parameter(Mandatory, HelpMessage = 'Content of SSH key')]
+    [String]$KeyContent,
+    [Parameter(HelpMessage = 'Create local tunnel using this spec ($null)')]
+    [String]$LocalPortDirective = $null,    
+    [Parameter(HelpMessage = 'Is debug on ($false)')]
+    [bool]$IsDebug = $false
 )
 
-Write-Verbose "Invoke_Ssh_Session.ps1: PSScriptRoot = ${PSScriptRoot}"
+function Test-SshLocalForward {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Directive
+    )
+
+    # Split the string by the colon delimiter
+    $parts = $Directive -split ':'
+
+    # Fail immediately if there are not exactly 3 parts
+    if ($parts.Count -ne 3) { return $false }
+
+    $localPort = $parts[0]
+    $targetIp = $parts[1]
+    $targetPort = $parts[2]
+
+    # Helper scriptblock to validate port numbers (1-65535)
+    $isValidPort = {
+        param($port)
+        if ($port -match '^\d+$') {
+            $num = [int]$port
+            return ($num -ge 1 -and $num -le 65535)
+        }
+        return $false
+    }
+
+    # Validate local port
+    if (-not (&$isValidPort $localPort)) { return $false }
+
+    # Validate target port
+    if (-not (&$isValidPort $targetPort)) { return $false }
+
+    # Validate target IP address using .NET parser
+    $isIpValid = [ipaddress]::TryParse($targetIp, [ref]$null)
+    if (-not $isIpValid) { return $false }
+
+    # All checks passed
+    return $true
+}
+
+Write-Verbose "Invoke_Ssh_Session.ps1: begin"
 
 try {
     ## START: generic section
     $UserErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Stop" 
 
-    Import-Module "${PSScriptRoot}/../oci-posh-utils.psm1"
+    Import-Module "${PSScriptRoot}/../oci-posh-utils.psd1"
     ## END: generic section
 
-    ## Create session and process, get information in custom object -- see below
-    $bastionSessionDescription = New-OpuPortForwardingSessionFull -BastionId $BastionId -TargetHost $TargetHost -TargetPort $TargetPort
-    $localPort = $bastionSessionDescription.LocalPort
+    ## Validate that ssh is indeed available
+    Test-OpuSshAvailable
 
-    $sshKey= New-OpuSshKeyFromSecret -SecretId $SecretId -KeyBaseName $bastionSessionDescription.BastionSession.DisplayName    
-    
-    ## NOTE 1: 'localhost' and not '127.0.0.1'
-    ## Behaviour with both ssh and putty is unreliable when not using 'localhost'.
-    ## NOTE 2: -o 'NoHostAuthenticationForLocalhost yes' 
-    ## Ensures no verification of locally forwarded port and localhost combos. 
-    ssh -4 -o 'NoHostAuthenticationForLocalhost yes' -p $localPort localhost -l $OsUser -i $sshKey
+    ## validate input local port directive
+    if (-not [string]::IsNullOrWhiteSpace($LocalPortDirective) ) {
+        if (-not (Test-SshLocalForward $LocalPortDirective) ) {
+            throw "Invalid Local port directive: ${LocalPortDirective}"
+        }
+    } 
+
+    ## Write key to file
+    $sshKey = New-TemporaryFile
+    $KeyContent | Out-File -FilePath $sshKey.FullName
+
+    ## Write SSH config to file
+    $sshConfig = New-TemporaryFile
+    $BastionSessionDescription.SshConfig | Out-File -FilePath $sshConfig.FullName
+
+    ## Format all relevant parameters 
+    $_sshKeyFullName = $sshkey.Fullname
+    $_sshConfigFullName = $sshConfig.Fullname
+
+    $_targetUser = $BastionSessionDescription.TargetUser
+    $_targetHost = $BastionSessionDescription.TargetHost
+    $_targetPort = $BastionSessionDescription.TargetPort
+
+    if ([string]::IsNullOrWhiteSpace($LocalPortDirective)) {
+        ssh -A -4 $_targetHost -p $_targetPort -l $_targetUser -F $_sshConfigFullName -i $_sshKeyFullName
+    }
+    else {
+        ## TODO: change to -N ?
+        ssh -L $LocalPortDirective -A -4 $_targetHost -p $_targetPort -l $_targetUser -F $_sshConfigFullName -i $_sshKeyFullName
+    }
+
 }
 catch {
     ## What else can we do? 
-    Write-Error "Invoke_Ssh_Session.ps1: $_"
-    return $false
+    throw "Invoke_Ssh_Session.ps1: $_"
 }
 finally {
     ## START: generic section
+
     ## To Maximize possible clean ups, continue on error 
     $ErrorActionPreference = "Continue"
     
-    ## Request cleanup if session object has been created
-    if ($null -ne $bastionSessionDescription) {
-        Remove-OpuPortForwardingSessionFull -BastionSessionDescription $bastionSessionDescription
+    ## Now remove module from memory
+    ## Remove-Module oci-posh-utils
+
+    ## Delete temp SSH key file and temp SSH config
+    $ErrorActionPreference = 'SilentlyContinue' 
+
+    if ($false -eq $IsDebug) {
+        Write-Verbose "Removing tmp files"
+        Remove-Item $sshKey -ErrorAction SilentlyContinue
+        Remove-Item $sshConfig -ErrorAction SilentlyContinue
+    }
+    else {
+        Write-Verbose "Key    : ${_sshKeyFullName}"
+        Write-Verbose "Config : ${_sshConfigFullName}"
+
     }
 
-    ## Delete temp SSH key file
-    $ErrorActionPreference = 'SilentlyContinue' 
-    Remove-Item $SshKey -ErrorAction SilentlyContinue
     $ErrorActionPreference = "Continue"
     ## Done, restore settings
     $ErrorActionPreference = $userErrorActionPreference
     ## END: generic section
+
+    Write-Verbose "Invoke_Ssh_Session.ps1: end"
 }
