@@ -5,6 +5,8 @@
 
 $BastionSessionDescription = [PSCustomObject]@{
     PSTypeName     = 'OpuManagedBastionSession.Object'
+    TypeNameStr    = 'OpuManagedSshSessionFull.Object'
+    LifecycleState = 'Active'
     BastionSession = $bastionSession
     KeyFile        = <key file generated for the session>
     JumpUser       = <jump user for the session>
