@@ -41,7 +41,7 @@ RUN : \
 && mkdir /home/app/public/ \
 && mkdir /home/app/private/
 
-# Copy source
+# Copy source, refer from target dir (?)
 COPY scripts/ /home/app/scripts/
 COPY public/  /home/app/public/
 COPY private/ /home/app/private/
@@ -49,19 +49,20 @@ COPY oci-posh-utils.psd1 /home/app
 
 # Install OCI powershell modules
 RUN : \
-&& /usr/bin/pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Common \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Core \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Bastion \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Computeinstanceagent \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Database \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.DatabaseTools \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Identity \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Mysql \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Objectstorage \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Secrets \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Vault \
-&& /usr/bin/pwsh -Command Install-Module -Name OCI.PSModules.Resourcemanager
+&& /usr/bin/pwsh -Command "Set-PSResourceRepository -Name PSGallery -Trusted" \
+&& /usr/bin/pwsh -Command "Install-PSResource -Name \
+OCI.PSModules.Common, \ 
+OCI.PSModules.Core, \
+OCI.PSModules.Bastion, \
+OCI.PSModules.Computeinstanceagent, \
+OCI.PSModules.Database, \
+OCI.PSModules.DatabaseTools, \
+OCI.PSModules.Identity, \
+OCI.PSModules.Mysql, \
+OCI.PSModules.Objectstorage, \
+OCI.PSModules.Secrets, \
+OCI.PSModules.Vault, \
+OCI.PSModules.Resourcemanager"
 
 # Enable ssh for app user within OCI region eu-frankfurt-1
 RUN : \
