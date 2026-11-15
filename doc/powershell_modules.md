@@ -1,7 +1,7 @@
 
 
 Install
-```
+```pwsh
 Install-Module -Name OCI.PSModules.Common
 Install-Module -Name OCI.PSModules.Core
 Install-Module -Name OCI.PSModules.Bastion
@@ -17,7 +17,7 @@ Install-Module -Name OCI.PSModules.Resourcemanager
 ```
 
 Remove
-```
+```pwsh
 Uninstall-Module -Name OCI.PSModules.Bastion
 Uninstall-Module -Name OCI.PSModules.Computeinstanceagent
 Uninstall-Module -Name OCI.PSModules.Database
@@ -30,6 +30,22 @@ Uninstall-Module -Name OCI.PSModules.Vault
 Uninstall-Module -Name OCI.PSModules.Resourcemanager
 Uninstall-Module -Name OCI.PSModules.Core
 Uninstall-Module -Name OCI.PSModules.Common
+```
+
+Load (when needed for interactivity) 
+```pwsh
+Import-Module OCI.PSModules.Common
+Import-Module OCI.PSModules.Core
+Import-Module OCI.PSModules.Bastion
+Import-Module OCI.PSModules.Computeinstanceagent
+Import-Module OCI.PSModules.Database
+Import-Module OCI.PSModules.DatabaseTools
+Import-Module OCI.PSModules.Identity
+Import-Module OCI.PSModules.Mysql
+Import-Module OCI.PSModules.Objectstorage
+Import-Module OCI.PSModules.Secrets
+Import-Module OCI.PSModules.Vault
+Import-Module OCI.PSModules.Resourcemanager
 ```
 
 Validate it works: 
