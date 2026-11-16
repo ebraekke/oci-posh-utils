@@ -191,28 +191,28 @@ try {
     $source = New-Object -TypeName 'Oci.CoreService.Models.InstanceSourceViaImageDetails'
     $source.ImageId = $ImageId
 
-    $details = New-Object -TypeName 'Oci.CoreService.Models.LaunchInstanceDetails'
-    $details.AvailabilityDomain = $AvailabilityDomain
-    $details.CompartmentId = $CompartmentId
-    $details.DisplayName = $name
-    $details.SourceDetails = $source
-    $details.CreateVnicDetails = $vnic      # attach the VNIC — without this, subnetId is null
-    $details.FaultDomain = "FAULT-DOMAIN-$FaultDomain"   # actual placement; name mirrors it
-    $details.Shape = $Shape
-    $details.ShapeConfig = $shapeConfig
-    $details.Metadata = $metadata
-    $details.AgentConfig = $agentConfig
-    $details.InstanceOptions = $instanceOptions   # tenancy-required flags (Nov 13 recipe)
+    $launchDetails = New-Object -TypeName 'Oci.CoreService.Models.LaunchInstanceDetails'
+    $launchDetails.AvailabilityDomain = $AvailabilityDomain
+    $launchDetails.CompartmentId = $CompartmentId
+    $launchDetails.DisplayName = $name
+    $launchDetails.SourceDetails = $source
+    $launchDetails.CreateVnicDetails = $vnic      # attach the VNIC — without this, subnetId is null
+    $launchDetails.FaultDomain = "FAULT-DOMAIN-$FaultDomain"   # actual placement; name mirrors it
+    $launchDetails.Shape = $Shape
+    $launchDetails.ShapeConfig = $shapeConfig
+    $launchDetails.Metadata = $metadata
+    $launchDetails.AgentConfig = $agentConfig
+    $launchDetails.InstanceOptions = $instanceOptions   # tenancy-required flags (Nov 13 recipe)
 
     ## Payload transparency (API-first: the JSON is the contract)
     Write-Verbose "Payload"
-    Write-Verbose ($details | ConvertTo-Json -Depth 10)
+    Write-Verbose ($launchDetails | ConvertTo-Json -Depth 10)
 
     ## Launch
     Write-Host "Launching '${name}' (FAULT-DOMAIN-$FaultDomain, $Ocpus OCPU / $MemoryInGBs GB)..."
     try {
         $instance = New-OCIComputeInstance `
-            -LaunchInstanceDetails $details `
+            -LaunchInstanceDetails $launchDetails `
             -Profile $OciProfile `
             -ConfigFile $ConfigFile
     }
