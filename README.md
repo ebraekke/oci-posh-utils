@@ -62,10 +62,10 @@ Item (3) above was how this project started. I was so impressed by the ability t
 panel that I wanted to replicate it. `./Scripts/Invoke_Ssh_Session.ps1` can be used as
 templates for creating your own scripts and for tips on how you can possibly automate access to database endpoints inside of OCI.   
 
-(i) There useed to be a `./Scripts/Invoke_Mongosh_Session.ps1` as well. Thsi shwos teh use of port forwarding for a DB tool. 
-The script itself It has been parked in the brach called `classic`. 
+(i) There useed to be a `./Scripts/Invoke_Mongosh_Session.ps1` as well. This shows the use of port forwarding for a DB tool. 
+The script itself has been parked in the brach called `classic`. 
 
-(ii) There also used to be an explanatin and corresponding source for a containerizing. This is also parked in the `classic` branch. 
+(ii) There also used to be an explanation and corresponding source for a containerizing. This is also parked in the `classic` branch. 
 
 ## Notes 
 
@@ -73,7 +73,7 @@ The script itself It has been parked in the brach called `classic`.
 
 - Cmdlets named `Test-...` do not follow Powershell best practice of returning `$true` or `$false`.  Rather they throw errors. I did this on purpose because I always use them within `try/catch` blocks. 
 - The (local) port forwarding code need soem love, especially around deletion of bastion sessions
-
+- Doc of functions is incomplte or outdated
 
 ### Requirements for regular setup
 
@@ -111,30 +111,11 @@ Get-Command -Module oci-posh-utils
 
 CommandType     Name                                               Version    Source
 -----------     ----                                               -------    ------
-Function        Get-OpuSecret                                      0.9        oci-posh-utils
-Function        Import-OpuObject                                   0.9        oci-posh-utils
-Function        Invoke-OpuSshSession                               0.9        oci-posh-utils
-Function        New-OpuAdbConnection                               0.9        oci-posh-utils
-Function        New-OpuDynPortForwardingSession                    0.9        oci-posh-utils
 Function        New-OpuManagedSshSessionFull                       0.9        oci-posh-utils
-Function        New-OpuOciConfigFileFromEnv                        0.9        oci-posh-utils
-Function        New-OpuPortForwardingSession                       0.9        oci-posh-utils
 Function        New-OpuPortForwardingSessionFull                   0.9        oci-posh-utils
-Function        New-OpuSshConfigFileFromBastionManagedSession      0.9        oci-posh-utils
-Function        New-OpuSshKeyFromKeygen                            0.9        oci-posh-utils
-Function        New-OpuSshKeyFromSecret                            0.9        oci-posh-utils
-Function        Read-OpuTofuVariables                              0.9        oci-posh-utils
-Function        Remove-OpuDynPortForwardingSession                 0.9        oci-posh-utils
 Function        Remove-OpuManagedSshsessionFull                    0.9        oci-posh-utils
-Function        Remove-OpuPortForwardingSession                    0.9        oci-posh-utils
 Function        Remove-OpuPortForwardingSessionFull                0.9        oci-posh-utils
-Function        Save-OpuObject                                     0.9        oci-posh-utils
 Function        Test-OpuIpAddr                                     0.9        oci-posh-utils
-Function        Test-OpuMongoshAvailable                           0.9        oci-posh-utils
-Function        Test-OpuMysqlshAvailable                           0.9        oci-posh-utils
 Function        Test-OpuOcidString                                 0.9        oci-posh-utils
-Function        Test-OpuOpensslAvailable                           0.9        oci-posh-utils
 Function        Test-OpuSshAvailable                               0.9        oci-posh-utils
-Function        Test-OpuVariablesLoaded                            0.9        oci-posh-utils
-
 ```

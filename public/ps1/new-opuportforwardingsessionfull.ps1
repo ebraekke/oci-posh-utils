@@ -189,7 +189,7 @@ function New-OpuPortForwardingSessionFull {
             ## Generate ephemeral key pair with  name: bastionkey-${now}.${useThisPort}
             Write-Host "Creating ephemeral key pair"
             $now = Get-Date -Format "yyyy_MM_dd_HH_mm_ss"
-            $keyFile= New-OpuSshKeyFromKeygen -KeyBaseName (-join ("bastionkey-", "${now}-${useThisPort}"))
+            $keyFile = New-OpuSshKeyFromKeygen -KeyBaseName (-join ("bastionkey-", "${now}-${useThisPort}"))
 
             Write-Host "Creating Port Forwarding Session to ${TargetHost}:${TargetPort}"
 

@@ -12,6 +12,9 @@
     Bastion plugin enabled at launch; InstanceOptions legacy-endpoint flags guard-set (tenancy
     requirement, Nov 13 finding). InstanceOptions naming drifted across SDK versions — hence reflection.
 
+    Remove using
+        Invoke-OCIComputeTerminateInstance -InstanceId 'ocid1.instance.oc1.eu-frankfurt-1.<hash>' -Force
+
 .PARAMETER Type
     Node role: 'ctl' or 'db'. Drives the name prefix.
 
