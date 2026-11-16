@@ -69,6 +69,10 @@ The script itself It has been parked in the brach called `classic`.
 
 ## Notes 
 
+## Missing or TODO
+
+- Cmdlets named `Test-...` do not follow Powershell best practice of returning `$true` or `$false`.  Rather they throw errors. I did this on purpose because I always use them within `try/catch` blocks. 
+
 ### Requirements for regular setup
 
 Clone the repo. 
