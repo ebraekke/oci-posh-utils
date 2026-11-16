@@ -72,6 +72,8 @@ The script itself It has been parked in the brach called `classic`.
 ## Missing or TODO
 
 - Cmdlets named `Test-...` do not follow Powershell best practice of returning `$true` or `$false`.  Rather they throw errors. I did this on purpose because I always use them within `try/catch` blocks. 
+- The (local) port forwarding code need soem love, especially around deletion of bastion sessions
+
 
 ### Requirements for regular setup
 
