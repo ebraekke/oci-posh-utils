@@ -1,0 +1,43 @@
+#cloud-config
+package_update: true
+
+packages:
+  - ufw
+
+runcmd:
+  - date -Iseconds > /tmp/cloud-init-firewall-started
+
+  # Defaults: deny inbound, allow outbound
+  - ufw default deny incoming
+  - ufw default allow outgoing
+
+  # SSH — bastion/controller access.
+  # NOTE: firewalld's default zone allowed SSH implicitly; ufw with default-deny does NOT.
+  # Without this rule your bastion sessions would be locked out.
+  - ufw allow 22/tcp
+  # Tighter alternative once you settle the VCN CIDR:
+  # - ufw allow from 10.0.0.0/16 to any port 22 proto tcp
+
+  # etcd client API
+  - ufw allow 2379/tcp
+
+  # etcd peer communication
+  - ufw allow 2380/tcp
+
+  # PostgreSQL
+  - ufw allow 5432/tcp
+
+  # Patroni REST API
+  - ufw allow 8008/tcp
+
+  # HAProxy write/read endpoints, if Autobase deploys HAProxy
+  - ufw allow 5000/tcp
+  - ufw allow 5001/tcp
+
+  # PgBouncer, if enabled
+  - ufw allow 6432/tcp
+
+  # Enable non-interactively (cloud-init has no TTY for the confirm prompt)
+  - ufw --force enable
+
+  - date -Iseconds > /tmp/cloud-init-firewall-complete

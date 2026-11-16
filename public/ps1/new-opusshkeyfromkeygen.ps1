@@ -67,17 +67,18 @@ function New-OpuSshKeyFromKeygen {
             }
         }
 
+        ## OLD: ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' | Out-Null
         ## TODO: Validate that it is the same on all platforms ... 
         ## Note: Pipe ouput to null to avoid side effects in pipelines
         try {
             if ($IsWindows) {
-                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' | Out-Null
+                ssh-keygen -t ed25519 -f $keyFile -q -N '' | Out-Null
             }
             elseif ($IsLinux) {
-                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' | Out-Null
+                ssh-keygen -t ed25519 -f $keyFile -q -N '' | Out-Null
             }
             elseif ($IsMacOs) {
-                ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' | Out-Null
+                ssh-keygen -t ed25519 -f $keyFile -q -N '' | Out-Null
             }
             else {
                 throw "This should not be possible ... how did you get here?"

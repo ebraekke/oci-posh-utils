@@ -224,6 +224,7 @@ function New-OpuManagedSshSessionFull {
                 "`n  ServerAliveCountMax 4" +
                 "`n  StrictHostKeyChecking no" + 
                 $userKnownHostsFile +
+                "`n  WarnWeakCrypto no-pq-kex" +
                 "`n  ProxyCommand ssh -i ${keyFile} -W %h:%p -p 22 ${JumpUser}@${JumpHost}" +
                 "`n"
             }

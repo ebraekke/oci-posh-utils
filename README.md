@@ -80,7 +80,8 @@ Import the cmdlets like so: ` Import-Module ./oci-posh-utils.psd1`.
 
 1. Clone repo
 2. From top level in project directory execute the following. Substitute podman with your container tool:
-`podman build --tag oci-posh-utils -f ./container/Containerfile `. 
+`podman build --tag oci-posh-utils -f ./container/Containerfile .`.
+Note: period at end, set top level dir as context. 
 3. Run interactively: `podman run -u 1654 -it -v ~/.oci:/home/app/.oci:ro oci-posh-utilst`.  
 
 Explanations:  

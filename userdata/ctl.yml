@@ -1,0 +1,50 @@
+#cloud-config
+package_update: true
+
+packages:
+  - ufw
+
+runcmd:
+  - date -Iseconds > /tmp/cloud-init-setup-started
+
+  # Firewall (Ubuntu: ufw, not firewalld). Default deny incoming / allow outgoing.
+  # CRITICAL: unlike firewalld's default zone, ufw does NOT implicitly allow SSH —
+  # allow 22 BEFORE enabling, or you lock yourself out.
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow 22/tcp
+  - ufw allow 80/tcp
+  - ufw allow 9876/tcp
+  - ufw --force enable
+
+  # Remove conflicting container packages (Ubuntu variants of the OL9 list).
+  - apt-get remove -y docker.io docker-doc docker-compose podman-docker containerd runc
+
+  # Install Docker repository prerequisites.
+  - apt-get install -y ca-certificates curl git jq
+
+  # Add Docker CE repository — keyring-based, per Docker's official Ubuntu instructions
+  # (apt has no 'dnf config-manager' equivalent, hence the explicit key + list steps).
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable" > /etc/apt/sources.list.d/docker.list
+
+  # Add Microsoft repository for PowerShell (Ubuntu 24.04).
+  - curl -fsSL https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -o /tmp/packages-microsoft-prod.deb
+  - dpkg -i /tmp/packages-microsoft-prod.deb
+
+  - apt-get update
+
+  # Install Docker Engine, Buildx, and Compose plugin.
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  # Enable and start Docker.
+  - systemctl enable --now docker
+
+  # Install PowerShell.
+  # TODO: OL9 config pinned powershell-7.6.9-1.rh.x86_64; to pin on Ubuntu use
+  # 'powershell=<exact>' with the version string from: apt-cache madison powershell
+  - apt-get install -y powershell
+
+  - date -Iseconds > /tmp/cloud-init-setup-complete
