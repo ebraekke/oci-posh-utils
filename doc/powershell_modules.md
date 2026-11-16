@@ -1,6 +1,7 @@
 
 
-Install
+# Install
+
 ```pwsh
 Install-Module -Name OCI.PSModules.Common
 Install-Module -Name OCI.PSModules.Core
@@ -16,7 +17,8 @@ Install-Module -Name OCI.PSModules.Vault
 Install-Module -Name OCI.PSModules.Resourcemanager
 ```
 
-Remove
+# Remove
+
 ```pwsh
 Uninstall-Module -Name OCI.PSModules.Bastion
 Uninstall-Module -Name OCI.PSModules.Computeinstanceagent
@@ -32,7 +34,7 @@ Uninstall-Module -Name OCI.PSModules.Core
 Uninstall-Module -Name OCI.PSModules.Common
 ```
 
-Load (when needed for interactivity) 
+# Load (when needed for interactivity) 
 ```pwsh
 Import-Module OCI.PSModules.Common
 Import-Module OCI.PSModules.Core
@@ -48,7 +50,8 @@ Import-Module OCI.PSModules.Vault
 Import-Module OCI.PSModules.Resourcemanager
 ```
 
-Validate it works: 
+# Validate it works
+
 ```
 > Get-OCIIdentityRegionsList
 

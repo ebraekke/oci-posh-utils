@@ -12,7 +12,7 @@
 RootModule = "${PSScriptRoot}/private/psm1/file-loader.psm1"
 
 # Version number of this module.
-ModuleVersion = '0.8'
+ModuleVersion = '0.9'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
