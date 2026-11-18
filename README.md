@@ -69,6 +69,14 @@ The script itself has been parked in the brach called `classic`.
 
 ## Notes 
 
+## OCI.PSModuels version 
+
+```pwsh
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Cmdlet          <alL>                                              148.0.0    OCI.PSModules.*
+```
+
 ## Missing or TODO
 
 - Cmdlets named `Test-...` do not follow Powershell best practice of returning `$true` or `$false`.  Rather they throw errors. I did this on purpose because I always use them within `try/catch` blocks. 
@@ -113,6 +121,7 @@ CommandType     Name                                               Version    So
 -----------     ----                                               -------    ------
 Function        New-OpuManagedSshSessionFull                       0.9        oci-posh-utils
 Function        New-OpuPortForwardingSessionFull                   0.9        oci-posh-utils
+Function        New-OpuSshKeyFromKeygen                            0.9        oci-posh-utils
 Function        Remove-OpuManagedSshsessionFull                    0.9        oci-posh-utils
 Function        Remove-OpuPortForwardingSessionFull                0.9        oci-posh-utils
 Function        Test-OpuIpAddr                                     0.9        oci-posh-utils
