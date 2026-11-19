@@ -31,7 +31,9 @@ param(
     [bool]$IsDebug = $false
 )
 
-function Test-SshLocalForward {
+<#
+TODO: Remove, no longer used
+function xTest-SshLocalForward {
     param (
         [Parameter(Mandatory = $true)]
         [string]$Directive
@@ -70,6 +72,7 @@ function Test-SshLocalForward {
     # All checks passed
     return $true
 }
+#>
 
 Write-Verbose "Invoke_Ssh_Session.ps1: begin"
 
@@ -82,7 +85,7 @@ try {
     ## END: generic section
 
     ## Validate that ssh is indeed available
-    Test-OpuSshAvailable
+    Assert-OpuSshAvailable
 
     ## validate input local port directive
     if (-not [string]::IsNullOrWhiteSpace($LocalPortDirective) ) {

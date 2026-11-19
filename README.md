@@ -69,7 +69,24 @@ The script itself has been parked in the brach called `classic`.
 
 ## Notes 
 
-## OCI.PSModuels version 
+## Known limitations 
+
+The standard `Launch_Nose.ps1`process creates a node with Ubuntu. 
+Currently the managed ssh agent does not work on Ubuntu.
+A workaraound is to create the controller node as Oracle Linux (OL9).
+To do this, override `-UserDatafile` and `-ImageId` when you create , like so:
+```powershell
+./scripts/Launch_Node.ps1 `
+-Type ctl `
+-SubnetId $bastion_subnet `
+-CompartmentId $C `
+-FaultDomain 1  `
+-SshAuthorizedKey $ctl_pub_key `
+-UserDataFile ./userdata/ctl-o9.yml `
+-ImageId $image
+```
+
+## OCI.PSModules version 
 
 ```pwsh
 CommandType     Name                                               Version    Source
@@ -80,7 +97,7 @@ Cmdlet          <alL>                                              148.0.0    OC
 ## Missing or TODO
 
 - Cmdlets named `Test-...` do not follow Powershell best practice of returning `$true` or `$false`.  Rather they throw errors. I did this on purpose because I always use them within `try/catch` blocks. 
-- The (local) port forwarding code need soem love, especially around deletion of bastion sessions
+- The (local) port forwarding code need some love, especially around deletion of bastion sessions
 - Doc of functions is incomplte or outdated
 
 ### Requirements for regular setup
@@ -91,7 +108,7 @@ The following software must be installed in your environment:
 - [OCI PowerShell Modules](doc/powershell_modules.md) 
 - OpenSSH binaries
 
-Import the cmdlets like so: ` Import-Module ./oci-posh-utils.psd1`. 
+Import the cmdlets like so: `Import-Module ./oci-posh-utils.psd1`. 
 
 ### Why PowerShell? 
 
@@ -107,10 +124,11 @@ Code structure inspired by
 https://www.psplaybook.com/2025/02/06/powershell-modules-best-practices/
 
 The initial inspiration for this set of utils was the Database Development Tools of OCI. 
-In one operation the "engine" performs teh following actions: 
+In one operation the "engine" performs the following actions: 
 - Pull connection information from vault (ip, user, pass)
-- Create a bastion session
-- Create a port forwarding session through the  
+- Create a bastion session to target ip and port
+- Create a port forwarding session through the local port
+- Attach util (mysqlsh / sqlcl) to local port using the pulled credentials
 
 ### Check status after loading module
 

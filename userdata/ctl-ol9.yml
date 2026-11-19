@@ -1,0 +1,35 @@
+#cloud-config
+package_update: true
+
+packages:
+  - firewalld
+
+runcmd:
+  - date -Iseconds > /tmp/cloud-init-setup-started
+  - systemctl enable --now firewalld
+
+  # Allow HTTP and the Docker app port in addition to default firewalld services.
+  - firewall-cmd --permanent --add-service=http
+  - firewall-cmd --permanent --add-port=9876/tcp
+  - firewall-cmd --reload
+
+  # Remove conflicting container packages.
+  - dnf remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine podman runc
+
+  # Install Docker repository prerequisites.
+  - dnf install -y dnf-plugins-core curl git jq
+
+  # Add Docker CE repository for RHEL-compatible distributions.
+  - dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+
+  # Install Docker Engine, Buildx, and Compose plugin.
+  - dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  # Enable and start Docker.
+  - systemctl enable --now docker
+
+  # Install a specific PowerShell version from Microsoft's RHEL 9 repository.
+  - curl -fsSL https://packages.microsoft.com/config/rhel/9/prod.repo -o /etc/yum.repos.d/microsoft-prod.repo
+  - dnf install -y powershell-7.6.9-1.rh.x86_64
+
+  - date -Iseconds > /tmp/cloud-init-setup-complete

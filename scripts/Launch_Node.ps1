@@ -106,9 +106,11 @@ param(
     [string]$ConfigFile = "$HOME/.oci/config"
 )
 
+<#
+TODO: Remove, no longer used
 ## Local guard: fail fast on wrong key material (same spirit as Test-OpuSshAvailable).
 ## Returns $true if the string looks like SSH PUBLIC key material.
-function Test-SshPublicKeyMaterial {
+function xTest-SshPublicKeyMaterial {
     param (
         [Parameter(Mandatory = $true)]
         [string]$KeyMaterial
@@ -123,6 +125,7 @@ function Test-SshPublicKeyMaterial {
     ## All checks passed
     return $true
 }
+#>
 
 Write-Verbose "Launch_Node.ps1: begin"
 
@@ -135,8 +138,8 @@ try {
     ## END: generic section
 
     ## Validate input before any work
-    Test-OpuOcidString -OcidString $CompartmentId -IsOfType "compartment"
-    Test-OpuOcidString -OcidString $SubnetId -IsOfType "subnet"
+    Assert-OpuOcidString -OcidString $CompartmentId -IsOfType "compartment"
+    Assert-OpuOcidString -OcidString $SubnetId -IsOfType "subnet"
     if (-not (Test-SshPublicKeyMaterial -KeyMaterial $SshAuthorizedKey)) {
         throw "SshAuthorizedKey does not look like SSH PUBLIC key material (private key or wrong content)"
     }
