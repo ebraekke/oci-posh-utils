@@ -159,8 +159,8 @@ function New-OpuPortForwardingSessionFull {
     process {
         try {
             ## Check input parameters
-            Test-OpuOcidString -OcidString $BastionId -IsOfType "bastion"
-            Test-OpuIpAddr -IpAddr $TargetHost
+            Assert-OpuOcidStrin -OcidString $BastionId -IsOfType "bastion"
+            Assert-OpuIpAddr -IpAddr $TargetHost
 
             ## Validate input
             if ((5 -gt $WaitForConnectSeconds) -or (60 -lt $WaitForConnectSeconds)) {
@@ -181,7 +181,7 @@ function New-OpuPortForwardingSessionFull {
             Write-Verbose "Will use local port: ${useThisPort} "
 
             ## check that mandatory sw is installed    
-            Test-OpuSshAvailable
+            Assert-OpuSshAvailable
 
             ## Import modules
             Import-Module OCI.PSModules.Bastion

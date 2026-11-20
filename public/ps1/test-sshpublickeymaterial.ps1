@@ -1,4 +1,4 @@
-## Local guard: fail fast on wrong key material (same spirit as Test-OpuSshAvailable).
+## Local guard: fail fast on wrong key material (same spirit as Assert-OpuSshAvailable).
 ## Returns $true if the string looks like SSH PUBLIC key material.
 function Test-SshPublicKeyMaterial {
     param (

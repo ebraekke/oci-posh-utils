@@ -3,7 +3,7 @@
 Create a new SSH key file pair and return the name of the private file.
 
 .DESCRIPTION
-Creates a new ssh key file pair with 2048 bit length in the TEMP directory of the runtim platform.
+Creates a new ssh key file pair with 2048 bit length in the TEMP directory of the runtime platform.
 Returns the name of the private key file. The public key file has the same name as the return value + ".pub". 
 Ensures that file has "rw" for owner only (0600) if platform is *nix.
  
@@ -31,7 +31,7 @@ Mode                 LastWriteTime         Length Name
 
 ❯ New-OpuSshKeyFromKeygen -KeyBaseName "thisone"
 
-New-OpuSshKeyFromKeygen: New-OpuSshKeyFromKeygen: Test-Executable: ssh not found
+New-OpuSshKeyFromKeygen: New-OpuSshKeyFromKeygen: Assert-Executable: ssh not found
 
 #>
 
@@ -51,7 +51,7 @@ function New-OpuSshKeyFromKeygen {
         Write-Verbose "New-OpuSshKeyFromKeygen: begin"
 
         ## check that mandatory sw is installed    
-        Test-OpuSshAvailable
+        Assert-OpuSshAvailable
 
         ## Generate name for temp SSH key file, tmpDir + base name supplied in parameter
         $tmpDir = Get-TempDir
@@ -69,7 +69,7 @@ function New-OpuSshKeyFromKeygen {
 
         ## OLD: ssh-keygen -t rsa -b 2048 -f $keyFile -q -N '' | Out-Null
         ## TODO: Validate that it is the same on all platforms ... 
-        ## Note: Pipe ouput to null to avoid side effects in pipelines
+        ## Note: Pipe output to null to avoid side effects in pipelines
         try {
             if ($IsWindows) {
                 ssh-keygen -t ed25519 -f $keyFile -q -N '' | Out-Null

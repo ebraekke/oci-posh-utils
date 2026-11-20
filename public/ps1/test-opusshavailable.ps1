@@ -16,15 +16,15 @@ Test-OpuSshAvailable
 ## Test that ssh tools are installed that fails because of no ssh.
 
 Test-OpuSshAvailable
-Exception: Test-Executable: ssh not found
+Exception: Assert-Executable: ssh not found
 
 .EXAMPLE
 ## Test that ssh tools are installed that fails because of no ssh-keygen.
 
 Test-OpuSshAvailable
-Exception: Test-Executable: ssh-keygen not found
+Exception: Assert-Executable: ssh-keygen not found
 #>
 function Test-OpuSshAvailable {
-    Test-Executable -ExeName "ssh"
-    Test-Executable -ExeName "ssh-keygen"        
+    Assert-Executable -ExeName "ssh"
+    Assert-Executable -ExeName "ssh-keygen"        
 }
