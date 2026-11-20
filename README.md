@@ -55,7 +55,7 @@ Notes:
 ssh based configuration management tools such as Ansible and PyInfra.
 2. Configure local ports to point to endpoints inside a VCN -- with private addresses no permanent path to the public -- to 
 be used with database tools such as Liquibase and Flyway. 
-3. Create an interactive session to a serviec endpoint inside of a VCN -- with private addresses no permanent path to the public -- to 
+3. Create an interactive session to a service endpoint inside of a VCN -- with private addresses no permanent path to the public -- to 
 be used with tools like `ssh` and and other cli like tools.
 
 Item (3) above was how this project started. I was so impressed by the ability to launch `sqlcl` or `mysqlsh` inside of the OCI control
@@ -73,7 +73,7 @@ The script itself has been parked in the brach called `classic`.
 
 The standard `Launch_Nose.ps1`process creates a node with Ubuntu. 
 Currently the managed ssh agent does not work on Ubuntu.
-A workaraound is to create the controller node as Oracle Linux (OL9).
+A workaround is to create the controller node as Oracle Linux (OL9).
 To do this, override `-UserDatafile` and `-ImageId` when you create , like so:
 ```powershell
 ./scripts/Launch_Node.ps1 `
@@ -96,9 +96,8 @@ Cmdlet          <alL>                                              148.0.0    OC
 
 ## Missing or TODO
 
-- Cmdlets named `Test-...` do not follow Powershell best practice of returning `$true` or `$false`.  Rather they throw errors. I did this on purpose because I always use them within `try/catch` blocks. 
 - The (local) port forwarding code need some love, especially around deletion of bastion sessions
-- Doc of functions is incomplte or outdated
+- Doc of functions is incomplete or outdated
 
 ### Requirements for regular setup
 
@@ -137,12 +136,14 @@ Get-Command -Module oci-posh-utils
 
 CommandType     Name                                               Version    Source
 -----------     ----                                               -------    ------
+Function        Assert-OpuIpAddr                                   0.9        oci-posh-utils
+Function        Assert-OpuOcidString                               0.9        oci-posh-utils
+Function        Assert-OpuSshAvailable                             0.9        oci-posh-utils
 Function        New-OpuManagedSshSessionFull                       0.9        oci-posh-utils
 Function        New-OpuPortForwardingSessionFull                   0.9        oci-posh-utils
 Function        New-OpuSshKeyFromKeygen                            0.9        oci-posh-utils
 Function        Remove-OpuManagedSshsessionFull                    0.9        oci-posh-utils
 Function        Remove-OpuPortForwardingSessionFull                0.9        oci-posh-utils
-Function        Test-OpuIpAddr                                     0.9        oci-posh-utils
-Function        Test-OpuOcidString                                 0.9        oci-posh-utils
-Function        Test-OpuSshAvailable                               0.9        oci-posh-utils
+Function        Test-SshLocalForward                               0.9        oci-posh-utils
+Function        Test-SshPublicKeyMaterial                          0.9        oci-posh-utils
 ```

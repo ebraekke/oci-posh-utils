@@ -48,7 +48,7 @@
     -SortBy TIMECREATED; newest non-Minimal non-aarch64 build.
 
 .PARAMETER UserDataFile
-    Optional cloud-init override. Defaults to the type-driven convention:
+        Optional cloud-init override. Defaults to the type-driven convention:
     userdata/<Type>.yml (relative to repo root). File must exist — fail fast, no bare nodes.
 
 .PARAMETER OciProfile
@@ -106,27 +106,6 @@ param(
     [string]$ConfigFile = "$HOME/.oci/config"
 )
 
-<#
-TODO: Remove, no longer used
-## Local guard: fail fast on wrong key material (same spirit as Test-OpuSshAvailable).
-## Returns $true if the string looks like SSH PUBLIC key material.
-function xTest-SshPublicKeyMaterial {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$KeyMaterial
-    )
-
-    ## Private key content must never be passed here
-    if ($KeyMaterial -match 'PRIVATE KEY') { return $false }
-
-    ## Common public key types: ssh-rsa / ssh-ed25519 / ssh-dss / ecdsa-sha2-*
-    if ($KeyMaterial -notmatch '^(ssh-(rsa|ed25519|dss)|ecdsa-sha2-\S+)\s') { return $false }
-
-    ## All checks passed
-    return $true
-}
-#>
-
 Write-Verbose "Launch_Node.ps1: begin"
 
 try {
@@ -170,8 +149,8 @@ try {
     ## Guard-set both: property naming drifted across SDK versions.
     $instanceOptions = New-Object -TypeName 'Oci.CoreService.Models.InstanceOptions'
     $instanceOptions.GetType().GetProperties() |
-        Where-Object { $_.Name -like 'AreLegacy*' } |
-        ForEach-Object { $instanceOptions."$($_.Name)" = $true }
+    Where-Object { $_.Name -like 'AreLegacy*' } |
+    ForEach-Object { $instanceOptions."$($_.Name)" = $true }
 
     $shapeConfig = New-Object -TypeName 'Oci.CoreService.Models.LaunchInstanceShapeConfigDetails'
     $shapeConfig.Ocpus = $Ocpus
